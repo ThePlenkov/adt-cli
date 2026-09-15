@@ -17,6 +17,8 @@
  * That's enough to distinguish "auth passed" from "auth blocked".
  */
 import { describe, it, before, after } from 'node:test';
+import { tlsFetch, startTestServer } from './_tls-fixtures.js';
+
 import assert from 'node:assert';
 import { startHttpServer } from '../src/lib/http/server.js';
 import { createSessionRegistry } from '../src/lib/session/registry.js';
@@ -25,6 +27,33 @@ import type { RunningHttpServer } from '../src/lib/http/server.js';
 const noopLog = () => {
   /* keep test output clean */
 };
+
+describe('adt-mcp HTTPS startup', () => {
+  it('rejects startup without TLS material', async () => {
+    // MCP_TLS_CERT/MCP_TLS_KEY fall back to the process environment —
+    // clear them so the fail-closed path is exercised deterministically.
+    const savedCert = process.env.MCP_TLS_CERT;
+    const savedKey = process.env.MCP_TLS_KEY;
+    delete process.env.MCP_TLS_CERT;
+    delete process.env.MCP_TLS_KEY;
+    try {
+      await assert.rejects(
+        () =>
+          startHttpServer({
+            port: 0,
+            host: '127.0.0.1',
+            log: noopLog,
+            tlsCert: undefined,
+            tlsKey: undefined,
+          }),
+        /TLS certificate and key are required/u,
+      );
+    } finally {
+      if (savedCert !== undefined) process.env.MCP_TLS_CERT = savedCert;
+      if (savedKey !== undefined) process.env.MCP_TLS_KEY = savedKey;
+    }
+  });
+});
 
 function emptyRegistry() {
   return createSessionRegistry({ ttlMs: 0 });
@@ -39,7 +68,7 @@ async function probeMcp(
   server: RunningHttpServer,
   headers: Record<string, string> = {},
 ): Promise<Response> {
-  return await fetch(`http://127.0.0.1:${server.port}/mcp`, {
+  return await tlsFetch(`https://127.0.0.1:${server.port}/mcp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -54,12 +83,8 @@ async function probeMcp(
 describe('adt-mcp HTTP auth — mode=none (default)', () => {
   let server: RunningHttpServer;
   before(async () => {
-    server = await startHttpServer({
-      port: 0,
-      host: '127.0.0.1',
+    server = await startTestServer({
       registry: emptyRegistry(),
-      multiSystem: { systems: {}, resolve: () => undefined },
-      log: noopLog,
     });
   });
   after(async () => {
@@ -76,7 +101,7 @@ describe('adt-mcp HTTP auth — mode=none (default)', () => {
   });
 
   it('allows unauthenticated /healthz', async () => {
-    const res = await fetch(`http://127.0.0.1:${server.port}/healthz`);
+    const res = await tlsFetch(`https://127.0.0.1:${server.port}/healthz`);
     assert.strictEqual(res.status, 200);
   });
 });
@@ -85,14 +110,10 @@ describe('adt-mcp HTTP auth — mode=bearer', () => {
   let server: RunningHttpServer;
   const token = 'super-secret-test-token-abc123';
   before(async () => {
-    server = await startHttpServer({
-      port: 0,
-      host: '127.0.0.1',
+    server = await startTestServer({
       authMode: 'bearer',
       authToken: token,
       registry: emptyRegistry(),
-      multiSystem: { systems: {}, resolve: () => undefined },
-      log: noopLog,
     });
   });
   after(async () => {
@@ -130,20 +151,16 @@ describe('adt-mcp HTTP auth — mode=bearer', () => {
   });
 
   it('still allows /healthz without auth (monitoring probes)', async () => {
-    const res = await fetch(`http://127.0.0.1:${server.port}/healthz`);
+    const res = await tlsFetch(`https://127.0.0.1:${server.port}/healthz`);
     assert.strictEqual(res.status, 200);
   });
 
   it('throws at startup when bearer mode has no token', async () => {
     await assert.rejects(
       async () =>
-        await startHttpServer({
-          port: 0,
-          host: '127.0.0.1',
+        await startTestServer({
           authMode: 'bearer',
           registry: emptyRegistry(),
-          multiSystem: { systems: {}, resolve: () => undefined },
-          log: noopLog,
         }),
       /bearer mode requires a non-empty token/u,
     );
@@ -153,13 +170,9 @@ describe('adt-mcp HTTP auth — mode=bearer', () => {
 describe('adt-mcp HTTP auth — mode=proxy (trustForwardedAuth)', () => {
   let server: RunningHttpServer;
   before(async () => {
-    server = await startHttpServer({
-      port: 0,
-      host: '127.0.0.1',
+    server = await startTestServer({
       trustForwardedAuth: true,
       registry: emptyRegistry(),
-      multiSystem: { systems: {}, resolve: () => undefined },
-      log: noopLog,
     });
   });
   after(async () => {
@@ -184,13 +197,9 @@ describe('adt-mcp HTTP auth — mode=proxy (trustForwardedAuth)', () => {
 describe('adt-mcp HTTP — CORS', () => {
   let server: RunningHttpServer;
   before(async () => {
-    server = await startHttpServer({
-      port: 0,
-      host: '127.0.0.1',
+    server = await startTestServer({
       allowedOrigins: ['https://app.example.com'],
       registry: emptyRegistry(),
-      multiSystem: { systems: {}, resolve: () => undefined },
-      log: noopLog,
     });
   });
   after(async () => {
@@ -198,7 +207,7 @@ describe('adt-mcp HTTP — CORS', () => {
   });
 
   it('preflight OPTIONS for allowed origin returns 204 with CORS headers', async () => {
-    const res = await fetch(`http://127.0.0.1:${server.port}/mcp`, {
+    const res = await tlsFetch(`https://127.0.0.1:${server.port}/mcp`, {
       method: 'OPTIONS',
       headers: {
         Origin: 'https://app.example.com',
@@ -234,7 +243,7 @@ describe('adt-mcp HTTP — CORS', () => {
   });
 
   it('preflight from disallowed origin returns 403', async () => {
-    const res = await fetch(`http://127.0.0.1:${server.port}/mcp`, {
+    const res = await tlsFetch(`https://127.0.0.1:${server.port}/mcp`, {
       method: 'OPTIONS',
       headers: {
         Origin: 'https://evil.example.com',
@@ -245,7 +254,7 @@ describe('adt-mcp HTTP — CORS', () => {
   });
 
   it('regular request from allowed origin has CORS response headers', async () => {
-    const res = await fetch(`http://127.0.0.1:${server.port}/healthz`, {
+    const res = await tlsFetch(`https://127.0.0.1:${server.port}/healthz`, {
       headers: { Origin: 'https://app.example.com' },
     });
     assert.strictEqual(res.status, 200);

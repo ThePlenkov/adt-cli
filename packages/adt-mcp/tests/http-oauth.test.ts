@@ -14,6 +14,8 @@
  * logic end-to-end.
  */
 import { describe, it, before, after } from 'node:test';
+import { tlsFetch, startTestServer } from './_tls-fixtures.js';
+
 import assert from 'node:assert';
 import http from 'node:http';
 import { AddressInfo } from 'node:net';
@@ -24,15 +26,10 @@ import {
   type JWK,
   type KeyLike,
 } from 'jose';
-import { startHttpServer } from '../src/lib/http/server.js';
 import type { RunningHttpServer } from '../src/lib/http/server.js';
 import { createSessionRegistry } from '../src/lib/session/registry.js';
 import type { UserHint } from '../src/lib/http/auth.js';
 import { __resetOAuthDiscoveryCacheForTests } from '../src/lib/http/oauth.js';
-
-const noopLog = () => {
-  /* keep test output clean */
-};
 
 function emptyRegistry() {
   return createSessionRegistry({ ttlMs: 0 });
@@ -140,7 +137,7 @@ async function probeMcp(
   server: RunningHttpServer,
   headers: Record<string, string> = {},
 ): Promise<Response> {
-  return await fetch(`http://127.0.0.1:${server.port}/mcp`, {
+  return await tlsFetch(`https://127.0.0.1:${server.port}/mcp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -160,9 +157,7 @@ describe('adt-mcp HTTP auth — mode=oauth (JWKS explicit)', () => {
   before(async () => {
     __resetOAuthDiscoveryCacheForTests();
     idp = await startMockIdp();
-    server = await startHttpServer({
-      port: 0,
-      host: '127.0.0.1',
+    server = await startTestServer({
       authMode: 'oauth',
       oauth: {
         issuer: idp.issuer,
@@ -173,8 +168,6 @@ describe('adt-mcp HTTP auth — mode=oauth (JWKS explicit)', () => {
       },
       onOAuthUserHint: (h) => capturedHints.push(h),
       registry: emptyRegistry(),
-      multiSystem: { systems: {}, resolve: () => undefined },
-      log: noopLog,
     });
   });
   after(async () => {
@@ -272,7 +265,7 @@ describe('adt-mcp HTTP auth — mode=oauth (JWKS explicit)', () => {
   });
 
   it('/healthz still works without auth', async () => {
-    const res = await fetch(`http://127.0.0.1:${server.port}/healthz`);
+    const res = await tlsFetch(`https://127.0.0.1:${server.port}/healthz`);
     assert.strictEqual(res.status, 200);
   });
 });
@@ -285,17 +278,13 @@ describe('adt-mcp HTTP auth — mode=oauth (OIDC discovery fallback)', () => {
     __resetOAuthDiscoveryCacheForTests();
     idp = await startMockIdp();
     // No jwksUri → force discovery.
-    server = await startHttpServer({
-      port: 0,
-      host: '127.0.0.1',
+    server = await startTestServer({
       authMode: 'oauth',
       oauth: {
         issuer: idp.issuer,
         audience: 'adt-mcp-api',
       },
       registry: emptyRegistry(),
-      multiSystem: { systems: {}, resolve: () => undefined },
-      log: noopLog,
     });
   });
   after(async () => {
@@ -318,13 +307,9 @@ describe('adt-mcp HTTP auth — mode=oauth config errors', () => {
   it('startHttpServer throws when authMode=oauth without oauth options', async () => {
     await assert.rejects(
       async () =>
-        await startHttpServer({
-          port: 0,
-          host: '127.0.0.1',
+        await startTestServer({
           authMode: 'oauth',
           registry: emptyRegistry(),
-          multiSystem: { systems: {}, resolve: () => undefined },
-          log: noopLog,
         }),
       /authMode=oauth requires `oauth` options/u,
     );

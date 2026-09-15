@@ -13,7 +13,9 @@
  * simple and composable so that future waves can drop in real auth.
  */
 
+import https from 'node:https';
 import http from 'node:http';
+import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -107,6 +109,14 @@ export interface HttpServerOptions {
   multiSystem?: MultiSystemConfig;
   /** Override the session registry (mainly for tests). */
   registry?: SessionRegistry;
+  /** Path to the PEM-encoded TLS certificate; also read from MCP_TLS_CERT. */
+  tlsCert?: string;
+  /** Path to the PEM-encoded TLS private key; also read from MCP_TLS_KEY. */
+  tlsKey?: string;
+  /** Inline PEM-encoded TLS certificate (useful for embedders and tests). */
+  tlsCertContent?: string;
+  /** Inline PEM-encoded TLS private key (useful for embedders and tests). */
+  tlsKeyContent?: string;
   /**
    * Enables destination-aware shared-server mode. Access and identity are
    * derived only from the authenticated request's trusted `UserHint` at MCP
@@ -980,22 +990,64 @@ export async function startHttpServer(
     (process.env.MCP_PORT ? Number(process.env.MCP_PORT) : 3000);
   const host = options.host ?? process.env.MCP_HOST ?? '127.0.0.1';
   const log = options.log ?? defaultLog;
-  const handler = createHttpMcpHandler(options);
-  const server = http.createServer((req, res) => {
-    void handler.handle(req, res);
-  });
+  // Resolve and validate TLS material before allocating the handler — a
+  // missing or malformed certificate must not leak the session registry.
+  const certPath = options.tlsCert ?? process.env.MCP_TLS_CERT;
+  const keyPath = options.tlsKey ?? process.env.MCP_TLS_KEY;
+  const cert =
+    options.tlsCertContent ??
+    (certPath ? await readFile(certPath, 'utf8') : undefined);
+  const key =
+    options.tlsKeyContent ??
+    (keyPath ? await readFile(keyPath, 'utf8') : undefined);
 
-  await new Promise<void>((resolve, reject) => {
-    const onError = (err: Error) => reject(err);
-    server.once('error', onError);
-    server.listen(port, host, () => {
-      server.removeListener('error', onError);
-      resolve();
+  if (!cert || !key) {
+    throw new Error(
+      'startHttpServer: TLS certificate and key are required. Provide tlsCert/tlsKey, ' +
+        'tlsCertContent/tlsKeyContent, or MCP_TLS_CERT/MCP_TLS_KEY.',
+    );
+  }
+  if (
+    !cert.includes('-----BEGIN CERTIFICATE-----') ||
+    !cert.includes('-----END CERTIFICATE-----')
+  ) {
+    throw new Error(
+      'startHttpServer: TLS certificate is not valid PEM — expected a ' +
+        '"-----BEGIN CERTIFICATE-----" block' +
+        (certPath ? ` in ${certPath}` : ' in tlsCertContent') +
+        '.',
+    );
+  }
+  if (!key.includes('PRIVATE KEY-----')) {
+    throw new Error(
+      'startHttpServer: TLS private key is not valid PEM — expected a ' +
+        '"-----BEGIN ... PRIVATE KEY-----" block' +
+        (keyPath ? ` in ${keyPath}` : ' in tlsKeyContent') +
+        '.',
+    );
+  }
+
+  const handler = createHttpMcpHandler(options);
+  let server: https.Server;
+  try {
+    server = https.createServer({ cert, key }, (req, res) => {
+      void handler.handle(req, res);
     });
-  });
+    await new Promise<void>((resolve, reject) => {
+      const onError = (err: Error) => reject(err);
+      server.once('error', onError);
+      server.listen(port, host, () => {
+        server.removeListener('error', onError);
+        resolve();
+      });
+    });
+  } catch (err) {
+    await handler.close().catch(() => undefined);
+    throw err;
+  }
 
   const boundPort = (server.address() as { port: number } | null)?.port ?? port;
-  log('info', `listening on http://${host}:${boundPort}/mcp`);
+  log('info', `listening on https://${host}:${boundPort}/mcp`);
 
   let closed = false;
   const close = async (): Promise<void> => {
@@ -1012,7 +1064,7 @@ export async function startHttpServer(
   };
 
   return {
-    url: `http://${host}:${boundPort}/mcp`,
+    url: `https://${host}:${boundPort}/mcp`,
     port: boundPort,
     host,
     registry: handler.registry,

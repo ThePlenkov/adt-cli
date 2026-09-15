@@ -25,9 +25,27 @@ Key properties:
 
 ### Docker (one-liner)
 
+TLS material is mandatory — mount a certificate and key into the container:
+
 ```bash
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
+  -keyout key.pem -out cert.pem -days 365 -nodes \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=IP:127.0.0.1,DNS:localhost"
+
+# The container runs as uid 10001 — give it read access without making the
+# key world-readable on the host (keeps mode 600):
+sudo chown 10001:10001 key.pem
+# … or run with your own uid instead:  --user "$(id -u):$(id -g)"
+# Note: after chown the key is owned by uid 10001 — delete it (rm key.pem)
+# or chown it back before regenerating the pair.
+
 docker run --rm -p 127.0.0.1:3000:3000 \
-  -e MCP_AUTH_TOKEN=change-me \
+  -v "$PWD/cert.pem:/app/cert.pem:ro" \
+  -v "$PWD/key.pem:/app/key.pem:ro" \
+  -e MCP_TLS_CERT=/app/cert.pem \
+  -e MCP_TLS_KEY=/app/key.pem \
+  -e MCP_AUTH_TOKEN="$(openssl rand -hex 32)" \
   -e MCP_ALLOWED_HOSTS=localhost,127.0.0.1 \
   ghcr.io/abapify/adt-mcp:latest
 ```
@@ -40,11 +58,22 @@ The container listens on `0.0.0.0:3000` inside, but only the loopback of the hos
 # Clone the repo just for the compose file (or copy it locally).
 git clone https://github.com/abapify/adt-cli.git && cd adt-cli
 
-# Minimal env file
-cat > .env.mcp <<'EOF'
-MCP_AUTH_TOKEN=change-me
-MCP_ALLOWED_HOSTS=localhost,127.0.0.1
-EOF
+# Generate the TLS pair into ./certs — compose mounts it at /app/certs.
+mkdir -p certs
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
+  -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=IP:127.0.0.1,DNS:localhost,DNS:adt-mcp"
+# The container runs as uid 10001 — keep the key at mode 600 but assign it
+# to the container uid so it can be read:
+sudo chown 10001:10001 certs/key.pem
+# (to regenerate the pair later, first rm certs/key.pem or chown it back)
+
+# Env file — the shipped .env.mcp.example carries the container paths
+# (/app/certs/...); a repo-root .env must NOT be used here since its
+# ../../cert.pem paths are relative to packages/adt-mcp.
+cp .env.mcp.example .env.mcp
+$EDITOR .env.mcp   # set MCP_AUTH_TOKEN etc.
 
 docker compose -f docker-compose.mcp.yaml --env-file .env.mcp up -d
 ```
@@ -67,13 +96,14 @@ Never commit the registry URL — pass it as a build arg.
 
 ```bash
 bunx nx build adt-mcp
-node packages/adt-mcp/dist/bin/adt-mcp-http.mjs --port 3000
+MCP_TLS_CERT=./cert.pem MCP_TLS_KEY=./key.pem \
+  node packages/adt-mcp/dist/bin/adt-mcp-http.mjs --port 3000
 ```
 
 Smoke test:
 
 ```bash
-curl -sf http://127.0.0.1:3000/healthz
+curl -k -sf https://127.0.0.1:3000/healthz
 # → {"status":"ok"}
 ```
 
@@ -96,10 +126,27 @@ curl -sf http://127.0.0.1:3000/healthz
 | `--oauth-required-scope <s>` (repeatable) | `OAUTH_REQUIRED_SCOPES` (CSV) | —                     | Each scope must be present in the `scope` claim.                                                      |
 | `--oauth-user-claim <name>`               | `OAUTH_USER_CLAIM`            | `sub`                 | JWT claim used as the user identity forwarded to tool handlers.                                       |
 | `--cors-origin <origin>` (repeatable)     | `MCP_CORS_ORIGIN` (CSV)       | —                     | CORS allow-list. Omit to block cross-origin browser clients.                                          |
+| `--tls-cert <path>`                       | `MCP_TLS_CERT`                | —                     | PEM-encoded server certificate. Required for the HTTPS listener.                                      |
+| `--tls-key <path>`                        | `MCP_TLS_KEY`                 | —                     | PEM-encoded server private key. Required for the HTTPS listener.                                      |
 | —                                         | `SAP_SYSTEMS_JSON`            | —                     | Inline multi-system registry as JSON (see [Multi-system configuration](#multi-system-configuration)). |
 | —                                         | `SAP_SYSTEMS_FILE`            | `~/.adt/systems.json` | Path to a JSON systems registry.                                                                      |
 
 Run `adt-mcp-http --help` for the authoritative list.
+
+TLS is mandatory. The server refuses to start without a certificate and private
+key; configure both paths with the flags or environment variables above. MCP
+clients and health checks must use `https://` URLs. For local development,
+generate a short-lived self-signed certificate, for example:
+
+```bash
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
+  -keyout key.pem -out cert.pem -days 365 -nodes \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=IP:127.0.0.1,DNS:localhost"
+```
+
+Repo-root `key.pem`/`cert.pem` files are covered by `.gitignore` — the
+private key cannot be committed accidentally.
 
 ## Authentication modes
 
@@ -122,9 +169,10 @@ MCP_AUTH_TOKEN="$(openssl rand -hex 32)" adt-mcp-http --port 3000
 Every request must include `Authorization: Bearer <token>`. The comparison uses `crypto.timingSafeEqual`.
 
 ```bash
-curl -H "Authorization: Bearer $MCP_AUTH_TOKEN" \
+curl --cacert cert.pem \
+     -H "Authorization: Bearer $MCP_AUTH_TOKEN" \
      -H 'Content-Type: application/json' \
-     -X POST http://127.0.0.1:3000/mcp \
+     -X POST https://127.0.0.1:3000/mcp \
      -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{...}}'
 ```
 
@@ -207,7 +255,10 @@ Resolution: `sap_connect { systemId: "DEV", username, password }` merges `baseUr
 
 ## Client examples
 
-Once the server is running, wire it into your MCP client.
+Once the server is running, wire it into your MCP client. All clients must use
+`https://` URLs. With a self-signed certificate, point the client runtime at
+your CA/cert (e.g. `NODE_EXTRA_CA_CERTS=./cert.pem` for Node-based clients) or
+use a certificate issued by a CA the client already trusts.
 
 ### Claude Desktop
 
@@ -216,7 +267,7 @@ Once the server is running, wire it into your MCP client.
   "mcpServers": {
     "adt": {
       "type": "http",
-      "url": "http://127.0.0.1:3000/mcp",
+      "url": "https://127.0.0.1:3000/mcp",
       "headers": {
         "Authorization": "Bearer change-me"
       }
@@ -232,7 +283,7 @@ Once the server is running, wire it into your MCP client.
   "servers": {
     "adt": {
       "type": "http",
-      "url": "http://127.0.0.1:3000/mcp",
+      "url": "https://127.0.0.1:3000/mcp",
       "headers": {
         "Authorization": "Bearer change-me"
       }
@@ -243,7 +294,7 @@ Once the server is running, wire it into your MCP client.
 
 ### Cursor
 
-Settings → MCP → **Add server** → type `HTTP`, URL `http://127.0.0.1:3000/mcp`, add an `Authorization` header.
+Settings → MCP → **Add server** → type `HTTP`, URL `https://127.0.0.1:3000/mcp`, add an `Authorization` header.
 
 ### Kiro
 
