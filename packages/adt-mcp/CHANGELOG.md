@@ -1,3 +1,15 @@
+## 0.4.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- **adt-mcp:** require HTTPS for HTTP transport ([#207](https://github.com/abapify/adt-cli/pull/207))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.2 (2026-09-08)
 
 ### 🚀 Features

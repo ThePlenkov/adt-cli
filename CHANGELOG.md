@@ -1,3 +1,27 @@
+## 0.4.3 (2026-09-16)
+
+### 🚀 Features
+
+- **abapgit:** dual-format deserialization foundation (XML + AFF JSON) ([#198](https://github.com/abapify/adt-cli/pull/198))
+- **abapgit:** dual-format support for 15 CDS/RAP object types ([#199](https://github.com/abapify/adt-cli/pull/199))
+- **abapgit:** add 7 legacy XML object types (MSAG, VIEW, ENQU, SHLP, TRAN, TYPE, XSLT) ([#200](https://github.com/abapify/adt-cli/pull/200))
+- **abapgit:** add 17 AFF-first object types (APLO, CHKC, CHKO, CHKV, SAJC, SAJT, etc.) ([#201](https://github.com/abapify/adt-cli/pull/201))
+- **nx-npm-trust:** add prepare-for-publish target + --otp passthrough ([46b9997e](https://github.com/abapify/adt-cli/commit/46b9997e))
+- **nx-npm-trust:** use webauth instead of OTP for prepare-for-publish ([cb914bbe](https://github.com/abapify/adt-cli/commit/cb914bbe))
+- **nx-npm-trust:** auto-trigger npm login --auth-type=web on EOTP ([c676d45e](https://github.com/abapify/adt-cli/commit/c676d45e))
+
+### 🩹 Fixes
+
+- **adt-mcp:** require HTTPS for HTTP transport ([#207](https://github.com/abapify/adt-cli/pull/207))
+- **adt-proxy:** add publishConfig.access for npm publishing ([#208](https://github.com/abapify/adt-cli/pull/208))
+- **release:** enrich release notes with PR authors Nx missed ([#197](https://github.com/abapify/adt-cli/pull/197))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.2 (2026-09-08)
 
 ### 🚀 Features

@@ -1,3 +1,18 @@
+## 0.4.3 (2026-09-16)
+
+### 🚀 Features
+
+- **abapgit:** add 17 AFF-first object types (APLO, CHKC, CHKO, CHKV, SAJC, SAJT, etc.) ([#201](https://github.com/abapify/adt-cli/pull/201))
+- **abapgit:** add 7 legacy XML object types (MSAG, VIEW, ENQU, SHLP, TRAN, TYPE, XSLT) ([#200](https://github.com/abapify/adt-cli/pull/200))
+- **abapgit:** dual-format support for 15 CDS/RAP object types ([#199](https://github.com/abapify/adt-cli/pull/199))
+- **abapgit:** dual-format deserialization foundation (XML + AFF JSON) ([#198](https://github.com/abapify/adt-cli/pull/198))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.2 (2026-09-08)
 
 ### 🚀 Features

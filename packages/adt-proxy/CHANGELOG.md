@@ -1,3 +1,15 @@
+## 0.4.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- **adt-proxy:** add publishConfig.access for npm publishing ([#208](https://github.com/abapify/adt-cli/pull/208))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.2 (2026-09-08)
 
 ### 🚀 Features
