@@ -37,7 +37,7 @@ export class AdkServiceDefinition extends AdkCrudSourceObject<SrvdMetadata> {
   protected readonly objectType = 'SRVD';
   protected readonly endpoint = 'ddic/srvd/sources';
 
-  private get contract(): AdkCrudSourceContract {
+  protected get contract(): AdkCrudSourceContract {
     return this.ctx.client.adt.ddic.srvd
       .sources as unknown as AdkCrudSourceContract;
   }
@@ -63,15 +63,11 @@ export class AdkServiceDefinition extends AdkCrudSourceObject<SrvdMetadata> {
     name: string,
     ctx?: AdkContext,
   ): Promise<AdkServiceDefinition> {
-    return AdkCrudSourceObject.getSourceObject.call(
-      this,
-      name,
-      ctx,
-    ) as Promise<AdkServiceDefinition>;
+    return this.getSourceObject(this, name, ctx);
   }
 
   static async exists(name: string, ctx?: AdkContext): Promise<boolean> {
-    return AdkCrudSourceObject.sourceObjectExists.call(this, name, ctx);
+    return this.sourceObjectExists(this, name, ctx);
   }
 
   /**
@@ -89,7 +85,7 @@ export class AdkServiceDefinition extends AdkCrudSourceObject<SrvdMetadata> {
     ctx?: AdkContext,
   ): Promise<AdkServiceDefinition> {
     const context = ctx ?? getGlobalContext();
-    return AdkCrudSourceObject.createSourceSkeleton.call(
+    return this.createSourceSkeleton(
       this,
       {
         name,
@@ -104,7 +100,7 @@ export class AdkServiceDefinition extends AdkCrudSourceObject<SrvdMetadata> {
       context.client.adt.ddic.srvd.sources.post.bind(
         context.client.adt.ddic.srvd.sources,
       ),
-    ) as Promise<AdkServiceDefinition>;
+    );
   }
 
   static async delete(

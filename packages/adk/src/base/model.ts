@@ -206,14 +206,17 @@ export abstract class AdkObject<K extends AdkKind = AdkKind, D = any> {
    * @param ctx - ADK context
    * @param dataOrName - Full data object OR just the object name for deferred loading
    */
-  constructor(ctx: AdkContext, dataOrName: D | string) {
+  constructor(
+    ctx: AdkContext,
+    dataOrName: D | string | Record<string, unknown>,
+  ) {
     this.ctx = ctx;
     if (typeof dataOrName === 'string') {
       // Deferred load - just store the name
       this._name = dataOrName;
     } else {
       // Full data provided
-      this._data = dataOrName;
+      this._data = dataOrName as D;
       // Cast to access name property which may exist on schema-inferred types
       this._name = (dataOrName as AdkObjectData).name;
     }

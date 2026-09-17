@@ -39,7 +39,7 @@ export class AdkBehaviorDefinition extends AdkCrudSourceObject<BdefMetadata> {
   protected readonly objectType = 'BDEF';
   protected readonly endpoint = 'bo/behaviordefinitions';
 
-  private get contract(): AdkCrudSourceContract {
+  protected get contract(): AdkCrudSourceContract {
     return this.ctx.client.adt.bo
       .behaviordefinitions as unknown as AdkCrudSourceContract;
   }
@@ -57,15 +57,11 @@ export class AdkBehaviorDefinition extends AdkCrudSourceObject<BdefMetadata> {
     name: string,
     ctx?: AdkContext,
   ): Promise<AdkBehaviorDefinition> {
-    return AdkCrudSourceObject.getSourceObject.call(
-      this,
-      name,
-      ctx,
-    ) as Promise<AdkBehaviorDefinition>;
+    return this.getSourceObject(this, name, ctx);
   }
 
   static async exists(name: string, ctx?: AdkContext): Promise<boolean> {
-    return AdkCrudSourceObject.sourceObjectExists.call(this, name, ctx);
+    return this.sourceObjectExists(this, name, ctx);
   }
 
   /**
@@ -83,7 +79,7 @@ export class AdkBehaviorDefinition extends AdkCrudSourceObject<BdefMetadata> {
     ctx?: AdkContext,
   ): Promise<AdkBehaviorDefinition> {
     const context = ctx ?? getGlobalContext();
-    return AdkCrudSourceObject.createSourceSkeleton.call(
+    return this.createSourceSkeleton(
       this,
       {
         name,
@@ -98,7 +94,7 @@ export class AdkBehaviorDefinition extends AdkCrudSourceObject<BdefMetadata> {
       context.client.adt.bo.behaviordefinitions.post.bind(
         context.client.adt.bo.behaviordefinitions,
       ),
-    ) as Promise<AdkBehaviorDefinition>;
+    );
   }
 
   static async delete(

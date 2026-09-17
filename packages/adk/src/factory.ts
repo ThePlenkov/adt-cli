@@ -14,7 +14,12 @@
 import type { AdkContext } from './base/context';
 import type { AdkObject } from './base/model';
 import type { AdkKind, AdkObjectForKind } from './base/kinds';
-import { resolveType, resolveKind, parseAdtType } from './base/registry';
+import {
+  resolveType,
+  resolveKind,
+  parseAdtType,
+  type AdkRegistrable,
+} from './base/registry';
 
 // ============================================
 // XML Parsing Utilities
@@ -127,7 +132,10 @@ export interface AdkFactory {
    * const cls = factory.get('ZCL_TEST', 'CLAS');
    * await cls.load();
    */
-  get(name: string, adtType: string): AdkObject | AdkGenericObject;
+  get(
+    name: string,
+    adtType: string,
+  ): AdkObject | AdkGenericObject | AdkRegistrable;
 
   /**
    * Get object with initial data (for deserialization)
@@ -142,7 +150,7 @@ export interface AdkFactory {
   getWithData(
     data: Record<string, unknown>,
     adtType: string,
-  ): AdkObject | AdkGenericObject;
+  ): AdkObject | AdkGenericObject | AdkRegistrable;
 
   /**
    * Get object by ADK kind (type-safe)
@@ -167,7 +175,9 @@ export interface AdkFactory {
    * const xml = await client.fetch('/sap/bc/adt/oo/classes/ZCL_TEST');
    * const cls = factory.fromXml(xml);
    */
-  fromXml(xml: string): AdkObject | AdkGenericObject | undefined;
+  fromXml(
+    xml: string,
+  ): AdkObject | AdkGenericObject | AdkRegistrable | undefined;
 
   /**
    * Create new object (for creation workflows)
@@ -175,7 +185,7 @@ export interface AdkFactory {
    * Returns deferred object without name - used when
    * creating new objects in SAP.
    */
-  create(adtType: string): AdkObject | AdkGenericObject;
+  create(adtType: string): AdkObject | AdkGenericObject | AdkRegistrable;
 }
 
 // ============================================
@@ -192,7 +202,10 @@ export function createAdkFactory(ctx: AdkContext): AdkFactory {
   return {
     ctx,
 
-    get(name: string, adtType: string): AdkObject | AdkGenericObject {
+    get(
+      name: string,
+      adtType: string,
+    ): AdkObject | AdkGenericObject | AdkRegistrable {
       const entry = resolveType(adtType);
 
       if (entry) {
@@ -206,7 +219,7 @@ export function createAdkFactory(ctx: AdkContext): AdkFactory {
     getWithData(
       data: Record<string, unknown>,
       adtType: string,
-    ): AdkObject | AdkGenericObject {
+    ): AdkObject | AdkGenericObject | AdkRegistrable {
       const entry = resolveType(adtType);
 
       if (entry) {
@@ -235,7 +248,9 @@ export function createAdkFactory(ctx: AdkContext): AdkFactory {
       return new entry.constructor(ctx, name) as AdkObjectForKind<K>;
     },
 
-    fromXml(xml: string): AdkObject | AdkGenericObject | undefined {
+    fromXml(
+      xml: string,
+    ): AdkObject | AdkGenericObject | AdkRegistrable | undefined {
       const identity = parseXmlIdentity(xml);
 
       if (!identity) {
@@ -245,7 +260,7 @@ export function createAdkFactory(ctx: AdkContext): AdkFactory {
       return this.get(identity.name, identity.type);
     },
 
-    create(adtType: string): AdkObject | AdkGenericObject {
+    create(adtType: string): AdkObject | AdkGenericObject | AdkRegistrable {
       // Create with empty name - will be set during creation workflow
       return this.get('', adtType);
     },

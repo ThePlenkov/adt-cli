@@ -33,7 +33,7 @@ export class AdkDclSource extends AdkCrudSourceObject<DclMetadata> {
   protected readonly objectType = 'DCLS';
   protected readonly endpoint = 'acm/dcl/sources';
 
-  private get contract(): AdkCrudSourceContract {
+  protected get contract(): AdkCrudSourceContract {
     return this.ctx.client.adt.ddic.dcl.sources as AdkCrudSourceContract;
   }
 
@@ -44,15 +44,11 @@ export class AdkDclSource extends AdkCrudSourceObject<DclMetadata> {
   // ─── Static Factory Methods ─────────────────────────────────────────────────
 
   static async get(name: string, ctx?: AdkContext): Promise<AdkDclSource> {
-    return AdkCrudSourceObject.getSourceObject.call(
-      this,
-      name,
-      ctx,
-    ) as Promise<AdkDclSource>;
+    return this.getSourceObject(this, name, ctx);
   }
 
   static async exists(name: string, ctx?: AdkContext): Promise<boolean> {
-    return AdkCrudSourceObject.sourceObjectExists.call(this, name, ctx);
+    return this.sourceObjectExists(this, name, ctx);
   }
 
   /**
@@ -66,7 +62,7 @@ export class AdkDclSource extends AdkCrudSourceObject<DclMetadata> {
     ctx?: AdkContext,
   ): Promise<AdkDclSource> {
     const context = ctx ?? getGlobalContext();
-    return AdkCrudSourceObject.createSourceSkeleton.call(
+    return this.createSourceSkeleton(
       this,
       {
         name,
@@ -80,7 +76,7 @@ export class AdkDclSource extends AdkCrudSourceObject<DclMetadata> {
       context.client.adt.ddic.dcl.sources.post.bind(
         context.client.adt.ddic.dcl.sources,
       ),
-    ) as Promise<AdkDclSource>;
+    );
   }
 
   static async delete(

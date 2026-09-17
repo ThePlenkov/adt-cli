@@ -7,9 +7,13 @@ export class AdkExternalSchema {
   readonly kind = AdkExternalSchema.kind;
   readonly name: string;
   protected readonly ctx: AdkContext;
-  constructor(ctx: AdkContext, name: string) {
+  constructor(ctx: AdkContext, nameOrData: string | Record<string, unknown>) {
     this.ctx = ctx;
-    this.name = name.toUpperCase();
+    this.name = (
+      typeof nameOrData === 'string'
+        ? nameOrData
+        : String(nameOrData.name ?? '')
+    ).toUpperCase();
   }
   get objectUri(): string {
     return `/sap/bc/adt/ddic/desd/${encodeURIComponent(this.name.toLowerCase())}`;

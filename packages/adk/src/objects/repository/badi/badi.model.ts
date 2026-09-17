@@ -29,9 +29,13 @@ export class AdkBadi {
   private _description?: string;
   private _package?: string;
 
-  constructor(ctx: AdkContext, name: string) {
+  constructor(ctx: AdkContext, nameOrData: string | Record<string, unknown>) {
     this.ctx = ctx;
-    this.name = name.toUpperCase();
+    this.name = (
+      typeof nameOrData === 'string'
+        ? nameOrData
+        : String(nameOrData.name ?? '')
+    ).toUpperCase();
   }
 
   /** ADT URI (lowercase path segment — SAP convention). */

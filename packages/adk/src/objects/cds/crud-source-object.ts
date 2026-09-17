@@ -12,20 +12,22 @@ import type { AdkCrudSourceContract } from './source-object';
  * This base eliminates the duplicated load/saveMainSource/lock/unlock/activate
  * boilerplate across those models.
  */
-export abstract class AdkCrudSourceObject<
-  TMetadata extends Record<string, unknown> = Record<string, unknown>,
-> {
+export abstract class AdkCrudSourceObject<TMetadata = Record<string, unknown>> {
   abstract readonly kind: string;
   readonly name: string;
   protected readonly ctx: AdkContext;
-  private metadata?: TMetadata;
+  protected metadata?: TMetadata;
 
   protected abstract readonly objectType: string;
   protected abstract readonly endpoint: string;
 
-  protected constructor(ctx: AdkContext, name: string) {
+  constructor(ctx: AdkContext, nameOrData: string | Record<string, unknown>) {
     this.ctx = ctx;
-    this.name = name.toUpperCase();
+    this.name = (
+      typeof nameOrData === 'string'
+        ? nameOrData
+        : String(nameOrData.name ?? '')
+    ).toUpperCase();
   }
 
   get objectUri(): string {
@@ -138,13 +140,13 @@ export abstract class AdkCrudSourceObject<
    * Get a source object (validates it exists by fetching source).
    * Generic helper used by static `get()` on subclasses.
    */
-  protected static async getSourceObject<T extends AdkCrudSourceObject>(
-    this: new (ctx: AdkContext, name: string) => T,
+  protected static async getSourceObject<T extends AdkCrudSourceObject<any>>(
+    ctor: new (ctx: AdkContext, name: string) => T,
     name: string,
     ctx?: AdkContext,
   ): Promise<T> {
     const context = AdkCrudSourceObject.resolveContext(ctx);
-    const obj = new this(context, name);
+    const obj = new ctor(context, name);
     await obj.getSource();
     return obj;
   }
@@ -153,13 +155,15 @@ export abstract class AdkCrudSourceObject<
    * Check if a source object exists.
    * Generic helper used by static `exists()` on subclasses.
    */
-  protected static async sourceObjectExists<T extends AdkCrudSourceObject>(
-    this: new (ctx: AdkContext, name: string) => T,
+  protected static async sourceObjectExists<T extends AdkCrudSourceObject<any>>(
+    ctor: new (ctx: AdkContext, name: string) => T,
     name: string,
     ctx?: AdkContext,
   ): Promise<boolean> {
     try {
-      await this.getSourceObject(name, ctx);
+      const context = AdkCrudSourceObject.resolveContext(ctx);
+      const obj = new ctor(context, name);
+      await obj.getSource();
       return true;
     } catch {
       return false;
@@ -170,8 +174,10 @@ export abstract class AdkCrudSourceObject<
    * Shared skeleton-creation helper. Subclasses pass their contract's `post`
    * function and the root element name + type that their AFF schema expects.
    */
-  protected static async createSourceSkeleton<T extends AdkCrudSourceObject>(
-    this: new (ctx: AdkContext, name: string) => T,
+  protected static async createSourceSkeleton<
+    T extends AdkCrudSourceObject<any>,
+  >(
+    ctor: new (ctx: AdkContext, name: string) => T,
     params: {
       name: string;
       description: string;
@@ -182,10 +188,7 @@ export abstract class AdkCrudSourceObject<
       objectTypeCode: string;
       responsible?: string;
     },
-    post: (
-      query: Record<string, string>,
-      body: Record<string, unknown>,
-    ) => Promise<unknown>,
+    post: (...args: any[]) => Promise<unknown>,
   ): Promise<T> {
     const context = AdkCrudSourceObject.resolveContext(params.ctx);
     const nameU = params.name.toUpperCase();
@@ -207,7 +210,7 @@ export abstract class AdkCrudSourceObject<
       },
     } as never);
 
-    return new this(context, nameU);
+    return new ctor(context, nameU);
   }
 
   /**

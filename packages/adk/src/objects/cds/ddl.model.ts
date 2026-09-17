@@ -36,7 +36,7 @@ export class AdkDdlSource extends AdkCrudSourceObject<DdlMetadata> {
   protected readonly objectType = 'DDLS';
   protected readonly endpoint = 'ddic/ddl/sources';
 
-  private get contract(): AdkCrudSourceContract {
+  protected get contract(): AdkCrudSourceContract {
     return this.ctx.client.adt.ddic.ddl.sources as AdkCrudSourceContract;
   }
 
@@ -57,15 +57,11 @@ export class AdkDdlSource extends AdkCrudSourceObject<DdlMetadata> {
    * Get a DDL source (does not fetch metadata, just returns handle)
    */
   static async get(name: string, ctx?: AdkContext): Promise<AdkDdlSource> {
-    return AdkCrudSourceObject.getSourceObject.call(
-      this,
-      name,
-      ctx,
-    ) as Promise<AdkDdlSource>;
+    return this.getSourceObject(this, name, ctx);
   }
 
   static async exists(name: string, ctx?: AdkContext): Promise<boolean> {
-    return AdkCrudSourceObject.sourceObjectExists.call(this, name, ctx);
+    return this.sourceObjectExists(this, name, ctx);
   }
 
   /**
@@ -82,7 +78,7 @@ export class AdkDdlSource extends AdkCrudSourceObject<DdlMetadata> {
     ctx?: AdkContext,
   ): Promise<AdkDdlSource> {
     const context = ctx ?? getGlobalContext();
-    return AdkCrudSourceObject.createSourceSkeleton.call(
+    return this.createSourceSkeleton(
       this,
       {
         name,
@@ -96,7 +92,7 @@ export class AdkDdlSource extends AdkCrudSourceObject<DdlMetadata> {
       context.client.adt.ddic.ddl.sources.post.bind(
         context.client.adt.ddic.ddl.sources,
       ),
-    ) as Promise<AdkDdlSource>;
+    );
   }
 
   static async delete(

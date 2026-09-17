@@ -14,9 +14,13 @@ export abstract class AdkSourceOnlyCdsObject {
   protected abstract readonly endpoint: string;
   private source?: string;
 
-  protected constructor(ctx: AdkContext, name: string) {
+  constructor(ctx: AdkContext, nameOrData: string | Record<string, unknown>) {
     this.ctx = ctx;
-    this.name = name.toUpperCase();
+    this.name = (
+      typeof nameOrData === 'string'
+        ? nameOrData
+        : String(nameOrData.name ?? '')
+    ).toUpperCase();
   }
 
   get objectUri(): string {
