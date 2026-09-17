@@ -1,3 +1,21 @@
+## 0.4.4 (2026-09-17)
+
+### 🚀 Features
+
+- **abapgit:** add ENHO and ENHS enhancement object types ([#203](https://github.com/abapify/adt-cli/pull/203))
+- **abapgit:** add 8 more object types (EEEC, SWCR, HTTP, NROB, CHDO, SMTG, SFPF, SCP1) ([#204](https://github.com/abapify/adt-cli/pull/204))
+- **abapgit:** full upstream object type coverage (168 types) ([#205](https://github.com/abapify/adt-cli/pull/205))
+
+### 🩹 Fixes
+
+- **ci:** prevent empty-tarball and mid-publish release failures ([3d11838b](https://github.com/abapify/adt-cli/commit/3d11838b))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.3 (2026-09-16)
 
 ### 🚀 Features

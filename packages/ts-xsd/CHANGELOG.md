@@ -1,3 +1,15 @@
+## 0.4.4 (2026-09-17)
+
+### 🚀 Features
+
+- **abapgit:** full upstream object type coverage (168 types) ([#205](https://github.com/abapify/adt-cli/pull/205))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.3 (2026-09-16)
 
 This was a version bump only for ts-xsd to align it with other projects, there were no code changes.

@@ -1,3 +1,17 @@
+## 0.4.4 (2026-09-17)
+
+### 🚀 Features
+
+- **abapgit:** full upstream object type coverage (168 types) ([#205](https://github.com/abapify/adt-cli/pull/205))
+- **abapgit:** add 8 more object types (EEEC, SWCR, HTTP, NROB, CHDO, SMTG, SFPF, SCP1) ([#204](https://github.com/abapify/adt-cli/pull/204))
+- **abapgit:** add ENHO and ENHS enhancement object types ([#203](https://github.com/abapify/adt-cli/pull/203))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.3 (2026-09-16)
 
 ### 🚀 Features
