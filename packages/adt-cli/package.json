@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@abapify/adt-fixtures": "0.4.5",
+    "@abapify/adt-mcp": "0.4.5",
     "@types/react": "18.3.0"
   },
   "bin": {

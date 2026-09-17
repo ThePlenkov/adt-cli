@@ -28,7 +28,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@abapify/adt-cli": "0.4.5",
     "@apidevtools/swagger-parser": "^10.1.0"
   },
   "repository": {

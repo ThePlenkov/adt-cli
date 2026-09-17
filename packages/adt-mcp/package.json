@@ -59,8 +59,5 @@
   "homepage": "https://github.com/abapify/adt-cli/tree/main/packages/adt-mcp#readme",
   "bugs": {
     "url": "https://github.com/abapify/adt-cli/issues"
-  },
-  "devDependencies": {
-    "@abapify/adt-cli": "0.4.5"
   }
 }
