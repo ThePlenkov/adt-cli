@@ -40,7 +40,8 @@ export async function loadFormatPlugin(formatSpec: string): Promise<AdtPlugin> {
     const err = error as Error;
     if (
       (err as any).code === 'MODULE_NOT_FOUND' ||
-      err.message?.includes(`Cannot find module '${packageName}'`)
+      err.message?.includes(`Cannot find module '${packageName}'`) ||
+      err.message?.includes(`Cannot find package '${packageName}'`)
     ) {
       throw new Error(
         `Plugin package '${packageName}' not found. Install it with: bun add ${packageName}`,
