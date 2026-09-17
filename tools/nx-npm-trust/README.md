@@ -33,6 +33,8 @@ straight to the script — no `--args="..."` wrapping required.
 | `--fix`              | Also patches `publishConfig.access=public` in `package.json` and runs `npm access set`.    | yes             |
 | `--mfa=<target>`     | With `--fix`: runs `npm access set mfa=<target> <pkg>` (e.g. `none` for OIDC).             | yes             |
 | `--prepare`          | Publishes a `0.0.0` placeholder for brand-new packages + `npm trust github …`.             | yes + 2FA       |
+| `--require-existing` | CI gate: fails when the package is not on npm yet — OIDC cannot bootstrap a new package.   | no              |
+| `--pack-check`       | CI gate: `npm pack --dry-run` must contain `dist/` files (empty-tarball guard).            | no              |
 | `--trust-workflow=…` | GitHub Actions workflow filename (default `publish.yml`).                                  | —               |
 | `--trust-repo=…`     | `<owner>/<repo>` allowed to publish via OIDC. Auto-detected from `git remote`.             | —               |
 | `--trust-provider=…` | `github` (default) or `gitlab`. GitLab also needs `--trust-namespace` + `--trust-project`. | —               |
