@@ -120,12 +120,28 @@ jobs:
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm:registry.npmjs.org" | jq -r .value)
           echo "$token" | cut -d. -f2 | base64 -d 2>/dev/null | jq '{iss, sub, workflow, workflow_ref, job_workflow_ref, repository, ref}'
 
+      - name: Build all packages
+        # `nx release publish` already builds via the nx-release-publish
+        # target's `dependsOn: ["build"]`, but we build explicitly so the
+        # pack-check gate below has real artifacts to inspect — and so a
+        # future config drift can never again ship package.json + README
+        # only tarballs (see @abapify/*@0.3.5/0.3.6, which went out empty).
+        run: ./node_modules/.bin/nx run-many -t build
+        shell: bash
+
       - name: Preflight npm trusted publishing checks
-        run: npx nx run-many -t npm-trust-check
+        # --require-existing: OIDC trusted publishing cannot create a
+        #   package — anything absent from npm must be bootstrapped first
+        #   (`nx run <pkg>:prepare-for-publish`, needs npm login + 2FA).
+        # --pack-check: `npm pack --dry-run` must contain dist/ files.
+        run: ./node_modules/.bin/nx run-many -t npm-trust-check --require-existing --pack-check
         shell: bash
 
       - name: Publish packages
-        run: npx nx release publish
+        # --nxBail=false: a single package failing must not cascade-skip
+        # its dependents — publish everything that can publish so the
+        # registry state stays as complete as possible.
+        run: ./node_modules/.bin/nx release publish --nxBail=false
         shell: bash
         env:
           NPM_CONFIG_PROVENANCE: true

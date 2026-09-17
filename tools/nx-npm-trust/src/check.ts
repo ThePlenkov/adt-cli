@@ -7,6 +7,8 @@
 // (`nx run-many -t npm-trust-check`). Mutations are opt-in:
 //   --fix      patch publishConfig + `npm access set`
 //   --prepare  publish 0.0.0 placeholder (if new) + `npm trust github`
+//   --require-existing  CI gate: fail when the package is not on npm yet
+//   --pack-check        CI gate: `npm pack --dry-run` must ship dist/ files
 //
 // Checks performed (all read-only by default, no network writes):
 //   1. package.json hygiene — name, version, publishConfig.access, exports.
@@ -92,6 +94,17 @@ const registry = getFlag('registry', 'https://registry.npmjs.org/');
 const fix = hasFlag('fix');
 const prepare = hasFlag('prepare');
 const verbose = hasFlag('verbose');
+// CI gates (used by publish.yml):
+//   --require-existing  fail when the package is not on npm yet. OIDC
+//                       trusted publishing can never create a package, so
+//                       a missing package is a guaranteed mid-publish E401.
+//                       Fix: `nx run <pkg>:prepare-for-publish` locally.
+//   --pack-check        `npm pack --dry-run` must yield dist/ files —
+//                       guards the empty-tarball regression (publish ran
+//                       without a prior build and shipped only
+//                       package.json + README).
+const requireExisting = hasFlag('require-existing');
+const packCheck = hasFlag('pack-check');
 // Optional MFA setting applied only in fix mode. Useful before switching to
 // OIDC trusted publishing (`--mfa=none`). Omit to leave MFA untouched.
 const mfaTarget = getFlag('mfa', '');
@@ -165,7 +178,13 @@ interface NpmCallOptions {
  * `{ scopeRegistry: false, jsonOutput: false }`.
  */
 function npm(cmdArgs: string[], opts: NpmCallOptions = {}): NpmResult {
-  const { jsonOutput = true, scopeRegistry = true, interactive = false, cwd, timeout = 20_000 } = opts;
+  const {
+    jsonOutput = true,
+    scopeRegistry = true,
+    interactive = false,
+    cwd,
+    timeout = 20_000,
+  } = opts;
   const extra = [
     `--registry=${registry}`,
     ...(scopeRegistry ? scopeFlag : []),
@@ -220,10 +239,7 @@ function npmLoginWeb(): void {
  * (inherited stdio — user sees and clicks the browser link), then the
  * original command is retried (still non-interactive to capture result).
  */
-function npmWith2FA(
-  cmdArgs: string[],
-  opts: NpmCallOptions = {},
-): NpmResult {
+function npmWith2FA(cmdArgs: string[], opts: NpmCallOptions = {}): NpmResult {
   // Force non-interactive for the actual command so stderr is captured.
   const result = npm(cmdArgs, { ...opts, interactive: false });
   if (result.code !== 0 && /EOTP|one-time password/i.test(result.stderr)) {
@@ -309,6 +325,11 @@ if (view.code === 0 && isObjJson && !(viewJson as ViewJson).error) {
   (isObjJson && (viewJson as ViewJson).error?.code === 'E404')
 ) {
   report.checks.exists = false;
+  if (requireExisting) {
+    report.problems.push(
+      'not on npm — OIDC trusted publishing cannot create a package; run `nx run <pkg>:prepare-for-publish` locally first (needs npm login + 2FA)',
+    );
+  }
 } else if (view.timedOut) {
   report.checks.exists = 'unknown';
   report.problems.push('npm view timed out (registry unreachable)');
@@ -395,6 +416,32 @@ if (name) {
   report.checks.trustedPublisherPackageUrl = `https://www.npmjs.com/package/${name}/access`;
 }
 
+// 5b. --pack-check: the tarball must contain real build output. `files`
+// allowlists silently skip missing entries, so a publish that ran before
+// `build` produces a package.json + README-only tarball — exactly what
+// shipped as @abapify/*@0.3.5/0.3.6.
+if (packCheck) {
+  const pack = npm(['pack', '--dry-run'], { timeout: 30_000 });
+  const packed = Array.isArray(pack.json)
+    ? (pack.json[0] as { files?: { path?: string }[] } | undefined)
+    : (pack.json as { files?: { path?: string }[] } | null);
+  const files =
+    pack.code === 0 && packed
+      ? (packed.files ?? [])
+          .map((f) => f.path)
+          .filter((p): p is string => Boolean(p))
+      : null;
+  if (files === null) {
+    report.problems.push(
+      `npm pack --dry-run failed: ${firstErrorLine(pack.stderr) || pack.code}`,
+    );
+  } else if (!files.some((f) => f.startsWith('dist/'))) {
+    report.problems.push(
+      'npm pack would ship no dist/ files — run the build first (`nx run <pkg>:build`), otherwise the tarball is empty',
+    );
+  }
+}
+
 // 6. --prepare: bootstrap trusted publishing for brand-new packages.
 // Mirrors the logic of the `/npm-publish prepare-ci` skill, but per package
 // and driven by nx (so it plays well with `run-many`).
@@ -445,10 +492,10 @@ if (prepare && name) {
         join(tmpDir, 'README.md'),
         `# ${name}\n\nPlaceholder. The real release is published via CI/CD.\n`,
       );
-      const publishResult = npmWith2FA(
-        ['publish', '--access=public'],
-        { cwd: tmpDir, timeout: 60_000 },
-      );
+      const publishResult = npmWith2FA(['publish', '--access=public'], {
+        cwd: tmpDir,
+        timeout: 60_000,
+      });
       if (publishResult.code === 0) {
         report.fixes.push(`published 0.0.0 placeholder for ${name}`);
         report.checks.exists = true;
@@ -551,7 +598,10 @@ const fixesSummary =
 const problemsSummary =
   report.problems.length > 0 ? `  ! ${report.problems.join(', ')}` : '';
 
-const modeTag = prepare ? ' [prepare]' : fix ? ' [fix]' : '';
+let modeTag = '';
+if (prepare) modeTag = ' [prepare]';
+else if (fix) modeTag = ' [fix]';
+else if (requireExisting || packCheck) modeTag = ' [ci-gate]';
 const parts = [
   `${symbol} ${name}@${pkg.version}${modeTag} — ${existsTag}`,
   fixesSummary,

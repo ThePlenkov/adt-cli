@@ -8,9 +8,9 @@
  * them, so we take the dry-run path).
  */
 import { describe, it, expect, vi } from 'vitest';
-import { applyPlan } from '../../../src/lib/services/checkin/apply';
-import { buildPlan } from '../../../src/lib/services/checkin/plan';
-import type { ChangePlanEntry } from '../../../src/lib/services/checkin/diff';
+import { applyPlan } from '../../../src/services/checkin/apply';
+import { buildPlan } from '../../../src/services/checkin/plan';
+import type { ChangePlanEntry } from '../../../src/services/checkin/diff';
 import type { AdkObject, AdkContext } from '@abapify/adk';
 import type { LockService } from '@abapify/adt-locks';
 

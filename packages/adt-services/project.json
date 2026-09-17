@@ -1,0 +1,13 @@
+{
+  "name": "adt-services",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/adt-services/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["{projectRoot}"]
+    }
+  },
+  "tags": [],
+  "targets": {}
+}

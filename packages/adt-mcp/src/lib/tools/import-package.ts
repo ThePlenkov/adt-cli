@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ImportService } from '@abapify/adt-cli';
+import { ImportService } from '@abapify/adt-services';
 import { initializeAdk } from '@abapify/adk';
 import { FileLockStore } from '@abapify/adt-locks';
 import type { ToolContext } from '../types';

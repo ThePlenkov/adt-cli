@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { BadiService } from '@abapify/adt-cli';
+import { BadiService } from '@abapify/adt-services';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ToolContext } from '../types';
 import { sessionOrConnectionShape } from './shared-schemas';

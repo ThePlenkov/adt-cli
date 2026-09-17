@@ -17,7 +17,7 @@
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getSource, GetSourceTooLargeError } from '@abapify/adt-cli';
+import { getSource, GetSourceTooLargeError } from '@abapify/adt-services';
 import type { ToolContext } from '../types';
 import { sessionOrConnectionShape } from './shared-schemas';
 import { resolveClient } from './session-helpers';

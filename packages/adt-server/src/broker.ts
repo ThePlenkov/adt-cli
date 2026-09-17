@@ -8,7 +8,7 @@ import {
   SourceVersionTooLargeError,
   type AdtClient,
 } from '@abapify/adt-client';
-import { ExactSourceHistoryService, BadiService } from '@abapify/adt-cli';
+import { ExactSourceHistoryService, BadiService } from '@abapify/adt-services';
 import type {
   DestinationContextFactory,
   DestinationLeaseProvider,

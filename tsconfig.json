@@ -131,6 +131,9 @@
     },
     {
       "path": "./packages/adt-proxy"
+    },
+    {
+      "path": "./packages/adt-services"
     }
   ],
   "compilerOptions": {}

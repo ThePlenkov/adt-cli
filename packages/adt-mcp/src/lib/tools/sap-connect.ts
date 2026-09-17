@@ -23,8 +23,8 @@ import {
   getAdtClientV2Safe,
   AdtAuthError,
   resolveConnectionClient,
-} from '@abapify/adt-cli';
-import { ChangesetService } from '@abapify/adt-cli';
+} from '@abapify/adt-services';
+import { ChangesetService } from '@abapify/adt-services';
 import type { ToolContext } from '../types';
 import { sessionOrConnectionShape } from './shared-schemas';
 import { resolveDestinationClient } from './session-helpers';

@@ -291,7 +291,7 @@ bunx nx format:write       # Prettier (run before every commit)
 
 | Package                     | Purpose                                     |
 | --------------------------- | ------------------------------------------- |
-| `@abapify/adt-cli`          | CLI service functions (see Policy below)    |
+| `@abapify/adt-services`     | Shared service functions (see Policy below) |
 | `@abapify/adt-client`       | Typed ADT client (contracts + HTTP adapter) |
 | `@abapify/adt-contracts`    | ADT endpoint contracts                      |
 | `@abapify/adt-schemas`      | Schema types for typed body/response        |
@@ -303,26 +303,29 @@ bunx nx format:write       # Prettier (run before every commit)
 | `@modelcontextprotocol/sdk` | MCP server primitives                       |
 | `zod`                       | Input validation                            |
 
-## Dependencies policy: MCP wraps CLI services
+## Dependencies policy: MCP wraps shared services
 
-**MCP is a thin MCP-transport adapter over the CLI service layer.** This is a
-deliberate architectural decision — see the _MCP ↔ CLI Coupling_ section in
-the repo-root `AGENTS.md` for the rationale.
+**MCP is a thin MCP-transport adapter over the shared service layer**
+(`@abapify/adt-services`). This is a deliberate architectural decision — see
+the _MCP ↔ CLI Coupling_ section in `.agents/repo-guide.md` for the
+rationale.
 
 Concrete consequences for this package:
 
-- **Do** import service functions from `@abapify/adt-cli`
-  (exported via `packages/adt-cli/src/index.ts`) instead of re-implementing
-  them. If logic exists in a CLI command, a tool handler here should
-  delegate to the same service — never fork it.
+- **Do** import service functions from `@abapify/adt-services` instead of
+  re-implementing them. If logic exists in a CLI command, a tool handler
+  here should delegate to the same service — never fork it. (`adt-cli`
+  re-exports the same services for backwards compatibility, but depend on
+  `adt-services` directly.)
 - **Do** depend on domain plugin packages (`@abapify/adt-aunit`,
   `@abapify/adt-rfc`, `@abapify/adt-plugin-abapgit`, …) when a tool needs
   their object handlers. These are the same plugins the CLI uses.
-- **Do not** depend on `@abapify/adt-cli`'s command/commander code —
-  commands are a transport layer and must not be imported from MCP. Depend
-  on _services_, not _commands_.
-- **Do not** create a dependency from `adt-cli` back to `adt-mcp` — that
-  would introduce a cycle. The arrow always points `adt-mcp → adt-cli`.
+- **Do not** depend on `@abapify/adt-cli` at runtime — commands/commander
+  are a transport layer and must not be imported from MCP. `adt-cli` is a
+  devDependency only, for parity tests.
+- **Do not** create a dependency from `adt-services` or `adt-cli` back to
+  `adt-mcp` — that would introduce a cycle. The arrow always points
+  `adt-mcp → adt-services`.
 
 The parity test harness at
 `packages/adt-cli/tests/e2e/parity.*.test.ts` is the source of truth for

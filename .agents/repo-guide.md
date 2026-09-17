@@ -55,9 +55,11 @@ Foundation packages (no `@abapify` deps): `ts-xsd`, `speci`, `logger`, `acds`, `
 
 ## MCP ↔ CLI Coupling (intentional)
 
-`@abapify/adt-mcp` is a **thin MCP adapter over the CLI service layer**. It
-may (and does) depend on `@abapify/adt-cli` and on the domain plugin packages
-(`@abapify/adt-aunit`, `@abapify/adt-rfc`, `@abapify/adt-plugin-*`, etc.).
+`@abapify/adt-mcp` is a **thin MCP adapter over the shared service layer**
+(`@abapify/adt-services`). It may (and does) depend on `@abapify/adt-services`
+and on the domain plugin packages (`@abapify/adt-aunit`, `@abapify/adt-rfc`,
+`@abapify/adt-plugin-*`, etc.). `@abapify/adt-cli` is only a devDependency
+used by parity/integration tests — it is not a runtime dependency.
 
 This is a deliberate architectural choice, not an accident:
 
@@ -70,12 +72,13 @@ This is a deliberate architectural choice, not an accident:
   feature is not "done" until both the CLI path and the MCP path hit the
   same mock backend through the same service function and return equivalent
   results.
-- **Code reuse**: MCP tool handlers delegate to CLI service functions
-  (exported from `packages/adt-cli/src/index.ts`) rather than re-implementing
-  transports, locking, XML serialisation, or ADK orchestration.
-- **Consequence**: the `adt-cli` → `adt-mcp` dependency direction is
-  forbidden (would create a cycle). The `adt-mcp` → `adt-cli` direction is
-  required.
+- **Code reuse**: MCP tool handlers delegate to service functions
+  (exported from `@abapify/adt-services`; `adt-cli` re-exports them for
+  backwards compatibility) rather than re-implementing transports, locking,
+  XML serialisation, or ADK orchestration.
+- **Consequence**: the `adt-services` → `adt-cli`/`adt-mcp` direction is
+  forbidden (would create a cycle). Both transports point at
+  `adt-services`: `adt-cli → adt-services` and `adt-mcp → adt-services`.
 
 When adding a new feature, add the CLI command **and** the MCP tool in the
 same change, and add a parity test that exercises both paths.
