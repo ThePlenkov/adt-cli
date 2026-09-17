@@ -1,0 +1,46 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "emitDeclarationOnly": false,
+    "declaration": true,
+    "composite": true,
+    "types": ["node"],
+    "lib": ["es2022", "dom"]
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../logger"
+    },
+    {
+      "path": "../adt-schemas"
+    },
+    {
+      "path": "../adt-plugin/tsconfig.lib.json"
+    },
+    {
+      "path": "../adt-locks/tsconfig.lib.json"
+    },
+    {
+      "path": "../adt-lint/tsconfig.lib.json"
+    },
+    {
+      "path": "../adt-contracts"
+    },
+    {
+      "path": "../adt-config/tsconfig.lib.json"
+    },
+    {
+      "path": "../adt-client"
+    },
+    {
+      "path": "../adt-auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../adk/tsconfig.lib.json"
+    }
+  ]
+}

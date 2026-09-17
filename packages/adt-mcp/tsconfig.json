@@ -20,19 +20,19 @@
   "exclude": ["node_modules", "dist"],
   "references": [
     {
+      "path": "../adt-services"
+    },
+    {
+      "path": "../adt-schemas"
+    },
+    {
       "path": "../adt-rfc"
     },
     {
       "path": "../adt-plugin-abapgit"
     },
     {
-      "path": "../adt-aunit"
-    },
-    {
-      "path": "../adk"
-    },
-    {
-      "path": "../adt-schemas"
+      "path": "../adt-plugin"
     },
     {
       "path": "../adt-locks"
@@ -41,22 +41,25 @@
       "path": "../adt-lint"
     },
     {
+      "path": "../adt-flow"
+    },
+    {
       "path": "../adt-fixtures"
     },
     {
       "path": "../adt-contracts"
     },
     {
-      "path": "../adt-client"
-    },
-    {
       "path": "../adt-config"
     },
     {
-      "path": "../adt-flow"
+      "path": "../adt-client"
     },
     {
-      "path": "../adt-plugin"
+      "path": "../adt-aunit"
+    },
+    {
+      "path": "../adk"
     },
     {
       "path": "../adt-cli"

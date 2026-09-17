@@ -160,7 +160,7 @@ const mockPlugin = {
   },
 };
 
-vi.mock('../../../src/lib/utils/format-loader', () => ({
+vi.mock('../../../src/utils/format-loader', () => ({
   loadFormatPlugin: vi.fn(async () => mockPlugin),
   parseFormatSpec: vi.fn((spec: string) => ({
     package: spec,
@@ -172,15 +172,15 @@ vi.mock('../../../src/lib/utils/format-loader', () => ({
 // Mock config
 // ──────────────────────────────────────────────────────────────────────
 
-vi.mock('../../../src/lib/utils/destinations', () => ({
+vi.mock('../../../src/utils/destinations', () => ({
   getConfig: vi.fn(async () => ({ raw: {} })),
 }));
 
 async function runImport(
-  opts: import('../../../src/lib/services/import/service').TransportImportOptions,
+  opts: import('../../../src/services/import/service').TransportImportOptions,
 ) {
   const { ImportService } =
-    await import('../../../src/lib/services/import/service');
+    await import('../../../src/services/import/service');
   return new ImportService().importTransport(opts);
 }
 

@@ -21,13 +21,14 @@
     "README.md"
   ],
   "dependencies": {
-    "@abapify/adt-cli": "0.4.3",
-    "@abapify/adt-mcp": "0.4.3",
     "@abapify/adt-client": "0.4.3",
+    "@abapify/adt-mcp": "0.4.3",
+    "@abapify/adt-services": "0.4.3",
     "yaml": "^2.8.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@abapify/adt-cli": "0.4.3",
     "@apidevtools/swagger-parser": "^10.1.0"
   }
 }

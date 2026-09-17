@@ -9,7 +9,7 @@ export {
   getAdtClientV2,
   getAdtClientV2Safe,
   AdtAuthError,
-} from './lib/utils/adt-client-v2';
+} from '@abapify/adt-services';
 
 // Programmatic services – consumed by adt-mcp and other workspace packages
 // that need to reuse CLI business logic without going through commander.
@@ -19,7 +19,7 @@ export {
   type PackageImportOptions,
   type TransportImportOptions,
   type ImportResult,
-} from './lib/services/import/service';
+} from '@abapify/adt-services';
 
 // Checkin (E08) — inverse of checkout; pushes local abapGit/gCTS files → SAP.
 export {
@@ -37,7 +37,7 @@ export {
   flattenPlanObjects,
   diffObject,
   applyPlan,
-} from './lib/services/checkin';
+} from '@abapify/adt-services';
 
 // Changeset (Wave 3) — transactional unit-of-work shared by CLI and MCP.
 export {
@@ -49,14 +49,14 @@ export {
   type AddEntryArgs as ChangesetAddArgs,
   type CommitResult as ChangesetCommitResult,
   type RollbackResult as ChangesetRollbackResult,
-} from './lib/services/changeset';
+} from '@abapify/adt-services';
 
 export {
   resolveConnectionClient,
   type ConnectionResolveArgs,
   type ResolveConnectionClientHooks,
   type ResolvedConnectionClient,
-} from './lib/services/connection';
+} from '@abapify/adt-services';
 
 // Exact immutable source history — shared by CLI and MCP delivery surfaces.
 export {
@@ -71,13 +71,13 @@ export {
   type GetVersionSourceInput,
   type ListObjectVersionsInput,
   type ListObjectVersionsResult,
-} from './lib/services/source-history';
+} from '@abapify/adt-services';
 
 export {
   CtsTransportMetadataService,
   type CtsTransportMetadataResult,
   type CtsTransportMetadataUnit,
-} from './lib/services/cts';
+} from '@abapify/adt-services';
 
 // Source retrieval — shared by CLI and MCP for arc-1 SAPRead parity.
 export {
@@ -93,7 +93,7 @@ export {
   type SourceInclude,
   type SourceMethod,
   type GrepMatch,
-} from './lib/services/source';
+} from '@abapify/adt-services';
 
 export {
   CheckService,
@@ -103,7 +103,7 @@ export {
   type CheckResult,
   type CheckServiceInput,
   type CheckSourceVersion,
-} from './lib/services/check/service';
+} from '@abapify/adt-services';
 
 export {
   CtsTransportLifecycleService,
@@ -115,7 +115,7 @@ export {
   type ReassignTransportResult,
   type ReleaseTransportInput,
   type ReleaseTransportResult,
-} from './lib/services/cts';
+} from '@abapify/adt-services';
 
 // BAdI — ENHO metadata (enhoxhb) and unified read (classic vit/wb + ENHO)
 export {
@@ -130,4 +130,4 @@ export {
   type BadiMetadata,
   type BadiReadResult,
   type ClassicBadiMetadata,
-} from './lib/services/badi';
+} from '@abapify/adt-services';

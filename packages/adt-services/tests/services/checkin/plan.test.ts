@@ -10,11 +10,8 @@
  * No SAP calls — we feed synthetic `AdkObject`-shaped stubs.
  */
 import { describe, it, expect } from 'vitest';
-import {
-  buildPlan,
-  classifyTier,
-} from '../../../src/lib/services/checkin/plan';
-import type { ChangePlanEntry } from '../../../src/lib/services/checkin/diff';
+import { buildPlan, classifyTier } from '../../../src/services/checkin/plan';
+import type { ChangePlanEntry } from '../../../src/services/checkin/diff';
 import type { AdkObject } from '@abapify/adk';
 
 function stub(name: string, type: string): AdkObject {

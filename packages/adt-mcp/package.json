@@ -1,7 +1,7 @@
 {
   "name": "@abapify/adt-mcp",
   "version": "0.4.3",
-  "description": "MCP server for SAP ADT operations – exposes adt-cli features as MCP tools",
+  "description": "MCP server for SAP ADT operations \u2013 exposes adt-cli features as MCP tools",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
@@ -31,25 +31,25 @@
     "model-context-protocol"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.0",
-    "@abapify/adt-cli": "0.4.3",
-    "@abapify/adt-config": "0.4.3",
+    "@abapify/adk": "0.4.3",
+    "@abapify/adt-aunit": "0.4.3",
     "@abapify/adt-client": "0.4.3",
+    "@abapify/adt-config": "0.4.3",
     "@abapify/adt-contracts": "0.4.3",
     "@abapify/adt-fixtures": "0.4.3",
     "@abapify/adt-flow": "0.4.3",
     "@abapify/adt-lint": "0.4.3",
     "@abapify/adt-locks": "0.4.3",
-    "@abapify/adt-schemas": "0.4.3",
-    "@abapify/adk": "0.4.3",
-    "@abapify/adt-aunit": "0.4.3",
-    "@abapify/adt-plugin-abapgit": "0.4.3",
     "@abapify/adt-plugin": "0.4.3",
+    "@abapify/adt-plugin-abapgit": "0.4.3",
     "@abapify/adt-rfc": "0.4.3",
+    "@abapify/adt-schemas": "0.4.3",
+    "@abapify/adt-services": "0.4.3",
+    "@modelcontextprotocol/sdk": "^1.27.0",
     "@xmldom/xmldom": "^0.9.9",
     "jose": "^6.2.1",
-    "zod-to-json-schema": "^3.25.1",
-    "zod": "^3.24.0"
+    "zod": "^3.24.0",
+    "zod-to-json-schema": "^3.25.1"
   },
   "repository": {
     "type": "git",
@@ -59,5 +59,8 @@
   "homepage": "https://github.com/abapify/adt-cli/tree/main/packages/adt-mcp#readme",
   "bugs": {
     "url": "https://github.com/abapify/adt-cli/issues"
+  },
+  "devDependencies": {
+    "@abapify/adt-cli": "0.4.3"
   }
 }

@@ -40,11 +40,14 @@ This file provides guidance to AI coding assistants when working with the `adt-c
 
 ### Services are a public API (reused by `@abapify/adt-mcp`)
 
-Service functions are re-exported from `packages/adt-cli/src/index.ts` so
-that `@abapify/adt-mcp` tool handlers can delegate to the same code paths
-the CLI uses. See the root-level `AGENTS.md` _MCP ↔ CLI Coupling_ section
-and `packages/adt-mcp/AGENTS.md` _Dependencies policy_ for the full
-rationale.
+Service implementations live in `@abapify/adt-services`
+(`packages/adt-services`) and are re-exported from
+`packages/adt-cli/src/index.ts` for backwards compatibility, so that
+`@abapify/adt-mcp` tool handlers can delegate to the same code paths the
+CLI uses. New service code goes into `adt-services`; the files under
+`src/lib/services/` here are thin `export *` shims. See
+`.agents/repo-guide.md` _MCP ↔ CLI Coupling_ and
+`packages/adt-mcp/AGENTS.md` _Dependencies policy_ for the full rationale.
 
 Practical rules:
 

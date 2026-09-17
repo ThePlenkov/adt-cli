@@ -12,7 +12,7 @@
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ChangesetService } from '@abapify/adt-cli';
+import { ChangesetService } from '@abapify/adt-services';
 import type { ToolContext } from '../types';
 import { optionalConnectionShape } from './shared-schemas';
 import { requireSession, textError, textOk } from './changeset-helpers';

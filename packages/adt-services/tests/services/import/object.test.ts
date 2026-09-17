@@ -39,7 +39,7 @@ vi.mock('@abapify/adk', () => ({
   })),
 }));
 
-vi.mock('../../../src/lib/utils/format-loader', () => ({
+vi.mock('../../../src/utils/format-loader', () => ({
   loadFormatPlugin: vi.fn(async () => ({
     name: 'abapGit',
     description: 'abapGit format plugin',
@@ -52,7 +52,7 @@ vi.mock('../../../src/lib/utils/format-loader', () => ({
   parseFormatSpec: vi.fn(() => ({ package: '@abapify/adt-plugin-abapgit' })),
 }));
 
-vi.mock('../../../src/lib/utils/destinations', () => ({
+vi.mock('../../../src/utils/destinations', () => ({
   getConfig: vi.fn(async () => ({ raw: {} })),
 }));
 
@@ -69,7 +69,7 @@ describe('ImportService.importObject()', () => {
 
   it('selects the requested type when the same name belongs to multiple object types', async () => {
     const { ImportService } =
-      await import('../../../src/lib/services/import/service');
+      await import('../../../src/services/import/service');
 
     const result = await new ImportService().importObject({
       objectName: 'Z_SHARED_NAME',
@@ -84,7 +84,7 @@ describe('ImportService.importObject()', () => {
 
   it('requires an explicit type when the same name belongs to multiple object types', async () => {
     const { ImportService } =
-      await import('../../../src/lib/services/import/service');
+      await import('../../../src/services/import/service');
 
     await expect(
       new ImportService().importObject({
