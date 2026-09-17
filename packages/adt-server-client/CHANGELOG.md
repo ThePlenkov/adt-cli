@@ -1,3 +1,14 @@
+## 0.4.5 (2026-09-17)
+
+### 🩹 Fixes
+
+- **release:** add repository metadata for sigstore provenance ([c9ff002e](https://github.com/abapify/adt-cli/commit/c9ff002e))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- ThePlenkov @ThePlenkov
+
 ## 0.4.4 (2026-09-17)
 
 This was a version bump only for adt-server-client to align it with other projects, there were no code changes.
