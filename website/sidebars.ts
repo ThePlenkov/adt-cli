@@ -151,6 +151,8 @@ const mcpTools = [
   'mcp/tools/get_context',
   'mcp/tools/lint_abap',
   'mcp/tools/get_traces',
+  'mcp/tools/cts_transport_metadata',
+  'mcp/tools/flow_checkout_tr',
 ];
 
 const sdkPackages = [
@@ -192,6 +194,8 @@ const sdkPackages = [
   'sdk/packages/openai-codegen',
   'sdk/packages/speci',
   'sdk/packages/ts-xsd',
+  'sdk/packages/adt-services',
+  'sdk/packages/adt-flow',
 ];
 
 const sdkContracts = [
