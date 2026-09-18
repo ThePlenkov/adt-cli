@@ -16,6 +16,7 @@ import type {
 } from '@abapify/adt-plugin';
 import { getAdtClientV2 } from './utils/adt-client-v2';
 import { getAdtSystem } from './ui/components/link';
+import { formatPluginExecutionError } from './utils/plugin-execution-error';
 
 /**
  * Load config file from explicit path or current directory
@@ -153,7 +154,7 @@ function pluginToCommand(
       try {
         await plugin.execute!(args, ctx);
       } catch (err) {
-        console.error('Command failed:', err);
+        console.error(formatPluginExecutionError(err));
         process.exit(1);
       }
     });
