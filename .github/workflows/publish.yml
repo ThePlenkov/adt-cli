@@ -148,3 +148,27 @@ jobs:
           NPM_CONFIG_ACCESS: public
           NPM_CONFIG_LOGLEVEL: verbose
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post-publish smoke test
+        # The monorepo hoists a single zod (v4) for local dev, so version-
+        # range bugs in published deps only surface on a clean install —
+        # see adt-schemas using `.loose()` while gcts-cli pinned zod 3,
+        # which crashed `adt` on startup in 0.4.4/0.4.5. Install the
+        # just-published packages in isolation and execute them.
+        run: |
+          set -e
+          mkdir -p /tmp/adt-smoke && cd /tmp/adt-smoke
+          npm init -y >/dev/null
+          for i in 1 2 3 4 5 6; do
+            if npm install @abapify/adt-cli@latest @abapify/adt-mcp@latest \
+                 --no-fund --no-audit --loglevel=error; then
+              break
+            fi
+            echo "install attempt $i failed (registry propagation?), retrying in 20s"
+            sleep 20
+          done
+          ./node_modules/.bin/adt --help >/dev/null
+          ./node_modules/.bin/adt --version
+          node --input-type=module -e \
+            "import('@abapify/adt-mcp').then(() => console.log('adt-mcp import OK'))"
+        shell: bash

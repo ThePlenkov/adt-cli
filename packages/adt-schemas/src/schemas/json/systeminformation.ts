@@ -21,7 +21,7 @@ export const systeminformationSchema = z
     release: z.string().optional(),
     sapRelease: z.string().optional(),
   })
-  .loose(); // Allow additional properties
+  .catchall(z.unknown()); // Allow additional properties (works on zod 3 and 4)
 
 export type SystemInformation = z.infer<typeof systeminformationSchema>;
 
