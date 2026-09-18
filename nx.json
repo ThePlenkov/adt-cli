@@ -75,6 +75,10 @@
     {
       "plugin": "@nx/vitest",
       "exclude": ["**/*"]
+    },
+    {
+      "plugin": "@nx-devkit/nx-cloud",
+      "options": {}
     }
   ],
   "release": {
