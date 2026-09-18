@@ -17,6 +17,7 @@ export default [
           ignoredDependencies: [
             '@abapify/adt-aunit',
             '@abapify/adt-client',
+            '@abapify/adt-fixtures',
             '@abapify/adt-config',
             '@abapify/adt-mcp',
             '@abapify/adt-plugin-abapgit',
