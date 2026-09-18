@@ -22,7 +22,7 @@ import { createSessionRegistry } from '../src/lib/session/registry.js';
 import {
   createMockAdtServer,
   type MockAdtServer,
-} from '../src/lib/mock/server.js';
+} from '@abapify/adt-fixtures';
 import type { RunningHttpServer } from '../src/lib/http/server.js';
 
 let mockAdt: MockAdtServer;

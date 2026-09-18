@@ -16,7 +16,7 @@ import { createMcpServer } from '../src/lib/server';
 import {
   createMockAdtServer,
   type MockAdtServer,
-} from '../src/lib/mock/server';
+} from '@abapify/adt-fixtures';
 import { createAdtClient, type AdtClient } from '@abapify/adt-client';
 import type { ConnectionParams } from '../src/lib/types';
 

@@ -667,7 +667,7 @@ The mock ADT server lives in the private `@abapify/adt-fixtures` package
 integration tests import it directly:
 
 ```typescript
-import { createMockAdtServer } from '../src/lib/mock/server';
+import { createMockAdtServer } from '@abapify/adt-fixtures';
 ```
 
 ---

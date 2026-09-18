@@ -31,10 +31,6 @@ packages/adt-mcp/
 │   │   │   ├── utils.ts        # extractObjectReferences, resolveObjectUriFromType
 │   │   │   ├── <tool-name>.ts  # one file per tool
 │   │   │   └── ...
-│   │   └── mock/
-│   │       ├── server.ts       # createMockAdtServer() – in-process HTTP server
-│   │       ├── fixtures.ts     # static XML/JSON fixtures
-│   │       └── index.ts        # mock public API
 └── tests/
     └── integration.test.ts     # integration tests (node:test + mock server)
 ```
@@ -166,9 +162,11 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
 
 ### Step 4 – Add mock fixture and integration test
 
-1. Add a fixture response to `src/lib/mock/fixtures.ts`
-2. Add a route handler in `src/lib/mock/server.ts` (`matchRoute` function)
-3. Add a `describe` block in `tests/integration.test.ts`
+The mock server lives in the private `@abapify/adt-fixtures` package
+(devDependency — never published).
+
+1. Add a fixture response/route in `packages/adt-fixtures` (`matchRoute`)
+2. Add a `describe` block in `tests/integration.test.ts`
 
 ### Step 5 – Update README and feature parity table
 
@@ -259,17 +257,16 @@ The spec enumerates the expected behaviour of each mode — keep the implementat
 
 ## Mock Server
 
-`createMockAdtServer()` starts an in-process `http.Server` on a random port. It:
-
-- Returns a fresh random CSRF token per instance (no hardcoded secrets)
-- Routes requests via `matchRoute(method, url)` in `server.ts`
-- Loads static XML/JSON fixtures from `fixtures.ts`
+`createMockAdtServer()` is imported from `@abapify/adt-fixtures` in tests
+(`tests/*.test.ts`). It starts an in-process `http.Server` on a random
+port, returns a fresh random CSRF token per instance, and routes requests
+via `matchRoute(method, url)` in the fixtures package.
 
 To add a new endpoint to the mock:
 
-1. Add the fixture string/object to `fixtures.ts`
-2. Add an `if` branch in `matchRoute()` in `server.ts`
-3. Add the corresponding `describe` + `it` in `integration.test.ts`
+1. Add the fixture + `if` branch in `matchRoute()` in
+   `packages/adt-fixtures`
+2. Add the corresponding `describe` + `it` in `tests/*.test.ts`
 
 ---
 
