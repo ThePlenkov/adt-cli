@@ -165,7 +165,7 @@ jobs:
           mkdir -p /tmp/adt-smoke && cd /tmp/adt-smoke
           npm init -y >/dev/null
           for i in $(seq 1 15); do
-            if npm install "@abapify/adt-cli@${VERSION}" "@abapify/adt-mcp@${VERSION}" \
+            if npm install "@abapify/adt-cli@${VERSION}" "@abapify/adt-mcp@${VERSION}" "@abapify/adt@${VERSION}" \
                  --no-fund --no-audit --loglevel=error; then
               break
             fi
@@ -180,4 +180,6 @@ jobs:
           ./node_modules/.bin/adt --version
           node --input-type=module -e \
             "import('@abapify/adt-mcp').then(() => console.log('adt-mcp import OK'))"
+          # Standalone bundle — verify the embedded build actually runs
+          node node_modules/@abapify/adt/dist/adt.mjs --version
         shell: bash

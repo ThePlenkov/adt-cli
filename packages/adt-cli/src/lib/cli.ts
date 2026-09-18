@@ -269,14 +269,18 @@ async function registerPluginCommands(
 }
 
 function cliVersion(): string {
-  try {
-    const pkg = createRequire(import.meta.url)(
-      '@abapify/adt-cli/package.json',
-    ) as { version?: string };
-    return pkg.version ?? '0.0.0';
-  } catch {
-    return '0.0.0';
+  const req = createRequire(import.meta.url);
+  // '@abapify/adt' is the standalone bundle package — it embeds this code
+  // but ships under its own name, so the adt-cli self-reference misses.
+  for (const name of ['@abapify/adt-cli', '@abapify/adt']) {
+    try {
+      const pkg = req(`${name}/package.json`) as { version?: string };
+      if (pkg.version) return pkg.version;
+    } catch {
+      // try the next package name
+    }
   }
+  return '0.0.0';
 }
 
 // Create main program

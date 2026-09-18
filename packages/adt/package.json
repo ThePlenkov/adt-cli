@@ -1,0 +1,38 @@
+{
+  "name": "@abapify/adt",
+  "version": "0.4.7",
+  "description": "Standalone single-file bundle of the ADT CLI — all runtime dependencies embedded",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "adt": "./dist/adt.mjs"
+  },
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abapify/adt-cli.git",
+    "directory": "packages/adt"
+  },
+  "bugs": {
+    "url": "https://github.com/abapify/adt-cli/issues"
+  },
+  "homepage": "https://github.com/abapify/adt-cli/tree/main/packages/adt#readme",
+  "keywords": [
+    "sap",
+    "adt",
+    "abap",
+    "cli"
+  ]
+}
