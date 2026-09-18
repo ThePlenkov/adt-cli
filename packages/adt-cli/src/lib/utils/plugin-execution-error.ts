@@ -1,22 +1,22 @@
 const GENERIC_FAILURE = '❌ Command failed: unexpected failure';
 const CODE_PATTERN = /^[a-z0-9_]{1,64}$/i;
 const MAX_MESSAGE_LENGTH = 300;
+// eslint-disable-next-line no-control-regex
+const ANSI_CSI = /\u001b\[[0-9;:]*[ -/]*[@-~]/gu;
+// eslint-disable-next-line no-control-regex
+const ANSI_OSC = /\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)/gu;
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/gu;
 
 /** Collapse plugin text to a single safe log line: no escape sequences, bounded length. */
 function sanitizeLogText(text: string): string {
-  return (
-    text
-      // eslint-disable-next-line no-control-regex
-      .replaceAll(
-        /\x1b\[[0-9;:]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g,
-        '',
-      )
-      // eslint-disable-next-line no-control-regex
-      .replaceAll(/[\x00-\x1f\x7f-\x9f]/g, ' ')
-      .replaceAll(/\s+/g, ' ')
-      .trim()
-      .slice(0, MAX_MESSAGE_LENGTH)
-  );
+  return text
+    .replaceAll(ANSI_CSI, '')
+    .replaceAll(ANSI_OSC, '')
+    .replaceAll(CONTROL_CHARS, ' ')
+    .replaceAll(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_MESSAGE_LENGTH);
 }
 
 /**
