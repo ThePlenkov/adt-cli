@@ -79,6 +79,9 @@
       "path": "../adk/tsconfig.lib.json"
     },
     {
+      "path": "../adt-mcp"
+    },
+    {
       "path": "../adt-fixtures"
     }
   ]

@@ -18,9 +18,6 @@
     },
     {
       "path": "../adt-client"
-    },
-    {
-      "path": "../adt-cli"
     }
   ]
 }
