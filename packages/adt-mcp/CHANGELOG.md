@@ -1,3 +1,14 @@
+## 0.4.7 (2026-09-18)
+
+### 🩹 Fixes
+
+- **adt-mcp:** move private adt-fixtures to devDependencies ([cbbffadf](https://github.com/abapify/adt-cli/commit/cbbffadf))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- ThePlenkov @ThePlenkov
+
 ## 0.4.6 (2026-09-18)
 
 This was a version bump only for adt-mcp to align it with other projects, there were no code changes.
