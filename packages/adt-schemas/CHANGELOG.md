@@ -1,3 +1,14 @@
+## 0.4.6 (2026-09-18)
+
+### 🩹 Fixes
+
+- **adt-schemas:** replace zod4-only .loose() with .catchall() ([9832c72e](https://github.com/abapify/adt-cli/commit/9832c72e))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- ThePlenkov @ThePlenkov
+
 ## 0.4.5 (2026-09-17)
 
 This was a version bump only for adt-schemas to align it with other projects, there were no code changes.
