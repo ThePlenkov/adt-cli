@@ -13,10 +13,7 @@ import { randomBytes } from 'node:crypto';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createMcpServer } from '../src/lib/server';
-import {
-  createMockAdtServer,
-  type MockAdtServer,
-} from '@abapify/adt-fixtures';
+import { createMockAdtServer, type MockAdtServer } from '@abapify/adt-fixtures';
 import { createAdtClient, type AdtClient } from '@abapify/adt-client';
 import type { ConnectionParams } from '../src/lib/types';
 

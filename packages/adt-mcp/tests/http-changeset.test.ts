@@ -19,10 +19,7 @@ import { randomBytes } from 'node:crypto';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { createSessionRegistry } from '../src/lib/session/registry.js';
-import {
-  createMockAdtServer,
-  type MockAdtServer,
-} from '@abapify/adt-fixtures';
+import { createMockAdtServer, type MockAdtServer } from '@abapify/adt-fixtures';
 import type { RunningHttpServer } from '../src/lib/http/server.js';
 
 let mockAdt: MockAdtServer;
