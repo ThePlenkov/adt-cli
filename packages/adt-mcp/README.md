@@ -662,13 +662,12 @@ bunx vitest run tests/integration.test.ts
 
 ### Using the mock server in your own tests
 
-```typescript
-import { createMockAdtServer } from '@abapify/adt-mcp/mock';
+The mock ADT server lives in the private `@abapify/adt-fixtures` package
+(monorepo-only — it is not published to npm). Inside this repository the
+integration tests import it directly:
 
-const mock = createMockAdtServer();
-const { port } = await mock.start();
-// ... test against http://localhost:${port}
-await mock.stop();
+```typescript
+import { createMockAdtServer } from '../src/lib/mock/server';
 ```
 
 ---
