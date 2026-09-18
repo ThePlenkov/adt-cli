@@ -157,15 +157,24 @@ jobs:
         # just-published packages in isolation and execute them.
         run: |
           set -e
+          # Pin the exact release version: the "latest" dist-tag and fresh
+          # version metadata lag on registry read replicas for minutes —
+          # v0.4.7 smoke initially resolved adt-mcp@0.4.6 and a not-yet-
+          # replicated adt-schemas@0.4.7. Budget ~8 min of retries.
+          VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p /tmp/adt-smoke && cd /tmp/adt-smoke
           npm init -y >/dev/null
-          for i in 1 2 3 4 5 6; do
-            if npm install @abapify/adt-cli@latest @abapify/adt-mcp@latest \
+          for i in $(seq 1 15); do
+            if npm install "@abapify/adt-cli@${VERSION}" "@abapify/adt-mcp@${VERSION}" \
                  --no-fund --no-audit --loglevel=error; then
               break
             fi
-            echo "install attempt $i failed (registry propagation?), retrying in 20s"
-            sleep 20
+            if [ "$i" = "15" ]; then
+              echo "install still failing after 15 attempts" >&2
+              exit 1
+            fi
+            echo "install attempt $i failed (registry propagation?), retrying in 30s"
+            sleep 30
           done
           ./node_modules/.bin/adt --help >/dev/null
           ./node_modules/.bin/adt --version

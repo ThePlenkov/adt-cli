@@ -10,6 +10,8 @@ import '@abapify/adt-plugin-abapgit';
 // plugin package; every other consumer uses `getFormatPlugin('gcts')`.
 import '@abapify/adt-plugin-gcts';
 
+import { createRequire } from 'node:module';
+
 import { Command } from 'commander';
 import {
   importObjectCommand,
@@ -266,6 +268,17 @@ async function registerPluginCommands(
   }
 }
 
+function cliVersion(): string {
+  try {
+    const pkg = createRequire(import.meta.url)(
+      '@abapify/adt-cli/package.json',
+    ) as { version?: string };
+    return pkg.version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+
 // Create main program
 export async function createCLI(options?: {
   /** Pre-loaded plugins to register instead of loading from config.
@@ -278,7 +291,7 @@ export async function createCLI(options?: {
   program
     .name('adt')
     .description('ADT CLI tool for managing SAP ADT services')
-    .version('1.0.0')
+    .version(cliVersion())
     .option(
       '--sid <sid>',
       'SAP System ID (e.g., TRL) - overrides default system',

@@ -23,4 +23,5 @@ export * from './utils/lock-helpers';
 export * from './utils/progress-reporter';
 export * from './utils/transport-numbers';
 export * from './ui/components/link';
+export { default as Link } from './ui/components/link';
 export * from './ui/types';

@@ -54,7 +54,7 @@ export interface ObjectTypeDef<T> {
 }
 
 interface CreateReadbackOperations<
-  T extends { name: string; description: string; package: string },
+  T extends { name: string; description: string; package?: string },
 > {
   create(
     name: string,
@@ -79,7 +79,7 @@ function isAmbiguousCreateFailure(error: unknown): boolean {
  * Only an exact name/description/package read-back is accepted as recovery.
  */
 export async function createWithReadbackRecovery<
-  T extends { name: string; description: string; package: string },
+  T extends { name: string; description: string; package?: string },
 >(
   operations: CreateReadbackOperations<T>,
   name: string,
@@ -112,7 +112,7 @@ export async function createWithReadbackRecovery<
     const matches =
       recovered.name.toUpperCase() === normalizedName &&
       recovered.description.trim() === description.trim() &&
-      recovered.package.toUpperCase() === normalizedPackage;
+      recovered.package?.toUpperCase() === normalizedPackage;
     if (!matches) throw error;
 
     return { object: recovered, recovered: true };
@@ -261,7 +261,7 @@ export function buildObjectCrudCommands<
   T extends {
     name: string;
     description: string;
-    package: string;
+    package?: string;
     activate(): Promise<T>;
     lock(transport?: string): Promise<ObjectLockHandle>;
     unlock(lockHandle: string): Promise<void>;
@@ -486,15 +486,19 @@ export function buildObjectCrudCommands<
             progress.done();
 
             progress.step(`💾 Writing source to ${name.toUpperCase()}...`);
-            await persistSourceWithReleasedLock(obj, source, {
-              lockHandle,
-              requestedTransport: options.transport,
-              activate: options.activate,
-              beforeActivate: () => {
-                progress.done();
-                progress.step(`⚡ Activating ${name.toUpperCase()}...`);
+            await persistSourceWithReleasedLock(
+              obj as T & SourceLifecycleObject<T>,
+              source,
+              {
+                lockHandle,
+                requestedTransport: options.transport,
+                activate: options.activate,
+                beforeActivate: () => {
+                  progress.done();
+                  progress.step(`⚡ Activating ${name.toUpperCase()}...`);
+                },
               },
-            });
+            );
             progress.done();
 
             console.log(
