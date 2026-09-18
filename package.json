@@ -55,6 +55,7 @@
     "@abapify/adt-export": "workspace:*",
     "@abapify/adt-playwright": "workspace:*",
     "@eslint/js": "^10.0.1",
+    "@nx-devkit/nx-cloud": "0.0.2",
     "@nx/eslint": "23.2.0",
     "@nx/eslint-plugin": "23.2.0",
     "@nx/jest": "23.2.0",
