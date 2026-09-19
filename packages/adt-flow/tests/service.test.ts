@@ -795,6 +795,41 @@ describe('transport checkout', () => {
     });
   });
 
+  it('rejects a partial omission when its preserved indexed source was edited', async () => {
+    const workspace = await root();
+    let current = manifest('modified', version('before'), version('after'));
+    const ports = dependencies(() => current);
+    const flow = createAdtFlowService(ports);
+
+    await flow.checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      config,
+    });
+    await writeFile(
+      join(workspace, 'src/feature/zcl_sample.clas.abap'),
+      'local edit\n',
+    );
+    current = manifest('modified', version('before'), version('after'));
+    current.entries[0]!.exact = false;
+    current.entries[0]!.changeKind = 'ambiguous';
+    current.entries[0]!.diagnostic = {
+      code: 'SOURCE_HISTORY_INTERVENING_VERSION',
+      message: 'A version from another transport occurs inside this scope.',
+    };
+    ports.readSource.mockClear();
+
+    await expect(
+      flow.checkout({
+        root: workspace,
+        transports: ['DEVK900001'],
+        config,
+        partial: true,
+      }),
+    ).rejects.toMatchObject({ code: 'working_tree_diverged' });
+    expect(ports.readSource).not.toHaveBeenCalled();
+  });
+
   it('skips unsupported objects while materializing supported objects from the same transport', async () => {
     const workspace = await root();
     const current = manifest('modified', version('before'), version('after'));

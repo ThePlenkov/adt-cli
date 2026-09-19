@@ -1194,6 +1194,25 @@ type PendingOwnership = Map<
   { previous?: ObjectDescriptor; ownedPaths: string[] }
 >;
 
+async function validateIndexedOwnership(
+  ctx: CheckoutContext,
+  identity: FlowObjectIdentity,
+  descriptor: ObjectDescriptor,
+): Promise<void> {
+  descriptor.ownedFiles = filterOwnedFiles(
+    descriptor.ownedFiles,
+    identity,
+    ctx.dependencies.format,
+  );
+  if (!(await verifyOwnedHashes(ctx.root, descriptor.ownedFiles))) {
+    throw new AdtFlowError(
+      'working_tree_diverged',
+      'An indexed file differs from its recorded content hash.',
+      { object: identity.canonical },
+    );
+  }
+}
+
 async function buildPendingOwnership(
   ctx: CheckoutContext,
   groups: ManifestContext['groups'],
@@ -1217,18 +1236,7 @@ async function buildPendingOwnership(
       }
       const owned: string[] = [];
       if (previous) {
-        previous.ownedFiles = filterOwnedFiles(
-          previous.ownedFiles,
-          identity,
-          ctx.dependencies.format,
-        );
-        if (!(await verifyOwnedHashes(ctx.root, previous.ownedFiles))) {
-          throw new AdtFlowError(
-            'working_tree_diverged',
-            'An indexed file differs from its recorded content hash.',
-            { object: identity.canonical },
-          );
-        }
+        await validateIndexedOwnership(ctx, identity, previous);
         for (const file of previous.ownedFiles) owned.push(file.path);
         owned.push(descriptorPath);
       } else {
@@ -1426,6 +1434,7 @@ async function addOmittedObjectDescriptors(
       // A previously materialized object remains the authoritative file map.
       // Its component-level omission is retained in the partial report rather
       // than replacing known source ownership with an empty descriptor.
+      await validateIndexedOwnership(ctx, identity, previous);
       accum.descriptorPaths.push(descriptorPath);
       continue;
     }
