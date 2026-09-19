@@ -93,6 +93,12 @@ export const sourceSelectionSchema = z.object({
   sourceUri: z.string().min(1),
 });
 
+export const objectOmissionSchema = z.object({
+  component: z.string().min(1),
+  diagnostic: z.string().min(1),
+  sourceTransport: z.string().min(1).optional(),
+});
+
 export const transportObjectInventoryEntrySchema = z.object({
   pgmid: z.string().min(1),
   type: z.string().min(1),
@@ -113,10 +119,11 @@ export const objectDescriptorSchema = z
       type: z.string().min(1),
       name: z.string().min(1),
     }),
-    state: z.enum(['present', 'deleted']),
+    state: z.enum(['present', 'deleted', 'omitted']),
     packagePath: z.array(z.string()),
     selections: z.array(sourceSelectionSchema),
     ownedFiles: z.array(ownedFileSchema),
+    omissions: z.array(objectOmissionSchema).optional(),
     configDigest: z.string().regex(/^[a-f0-9]{64}$/),
     formatDigest: z.string().regex(/^[a-f0-9]{64}$/),
   })
@@ -132,14 +139,21 @@ export const objectDescriptorSchema = z
       });
     }
     if (
-      value.state === 'deleted' &&
+      (value.state === 'deleted' || value.state === 'omitted') &&
       (value.selections.length > 0 || value.ownedFiles.length > 0)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          'Deleted descriptors must have empty selections and ownedFiles.',
+          'Deleted and omitted descriptors must have empty selections and ownedFiles.',
         path: ['state'],
+      });
+    }
+    if (value.state === 'omitted' && (value.omissions?.length ?? 0) === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Omitted descriptors must record at least one omission.',
+        path: ['omissions'],
       });
     }
   });

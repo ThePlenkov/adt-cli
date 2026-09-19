@@ -66,8 +66,11 @@ inventory, including unsupported or currently filtered types. Object descriptors
 under `.adt/objects/` are written for both base and head. Object
 descriptors use `.adt/objects/<TYPE>/<unique-name>.<type>.adt.json`. The index
 stores hashes and immutable version identities, never source bodies or
-credentials. Removing `.adt` only removes the optimization; source selection
-continues to come from the supplied SAP manifest operation.
+credentials. In an explicit partial checkout, an object that cannot be
+materialized still receives an `omitted` descriptor with its identity and
+component diagnostic, but no owned files or source selection. Removing `.adt`
+only removes the optimization; source selection continues to come from the
+supplied SAP manifest operation.
 
 Exactness applies to versioned source components. Metadata files describe the
 object metadata available at checkout time; flow does not reconstruct historical

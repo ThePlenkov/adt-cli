@@ -156,6 +156,13 @@ function isUnsupportedEntry(entry: TransportSourceManifestEntry): boolean {
   );
 }
 
+function omissionDiagnostic(entry: TransportSourceManifestEntry): string {
+  return (
+    entry.diagnostic?.code ??
+    (isUnsupportedEntry(entry) ? 'UNSUPPORTED' : 'MANIFEST_INEXACT')
+  );
+}
+
 function materializedObject(entry: TransportSourceManifestEntry) {
   return entry.repositoryObject ?? entry.object;
 }
@@ -1084,7 +1091,7 @@ async function skippedInexactEntries(
   ): FlowSkippedObject => ({
     object: `${entry.object.type}/${entry.object.name}`,
     component: entry.component.id,
-    diagnostic: entry.diagnostic?.code ?? 'MANIFEST_INEXACT',
+    diagnostic: omissionDiagnostic(entry),
     ...(entry.sourceTransport
       ? { sourceTransport: entry.sourceTransport }
       : {}),
@@ -1107,7 +1114,7 @@ async function unsupportedEntries(
   ): FlowSkippedObject => ({
     object: `${entry.object.type}/${entry.object.name}`,
     component: entry.component.id,
-    diagnostic: entry.diagnostic?.code ?? 'UNSUPPORTED',
+    diagnostic: omissionDiagnostic(entry),
     ...(entry.sourceTransport
       ? { sourceTransport: entry.sourceTransport }
       : {}),
@@ -1370,6 +1377,102 @@ async function addTransportDescriptors(
   }
 }
 
+function skippedEntryMatches(
+  entry: TransportSourceManifestEntry,
+  skipped: FlowCheckoutResult['skipped'],
+): boolean {
+  return skipped.some(
+    (item) =>
+      item.object === `${entry.object.type}/${entry.object.name}` &&
+      item.component === entry.component.id &&
+      item.diagnostic === omissionDiagnostic(entry) &&
+      item.sourceTransport === entry.sourceTransport,
+  );
+}
+
+/**
+ * Persist identities for objects deliberately omitted by a partial checkout.
+ * They own no source paths, but remain discoverable from the transport index
+ * with the exact reason that prevented materialization.
+ */
+async function addOmittedObjectDescriptors(
+  ctx: CheckoutContext,
+  manifest: TransportSourceManifest,
+  skipped: FlowCheckoutResult['skipped'],
+  accum: CheckoutAccumulator,
+): Promise<void> {
+  if (ctx.mode !== 'head' || !ctx.partial) return;
+
+  const omittedGroups = groupEntries(
+    manifest.entries.filter((entry) => skippedEntryMatches(entry, skipped)),
+  );
+  for (const { identity, entries } of omittedGroups) {
+    const descriptorPath = objectDescriptorPath(identity);
+    if (accum.descriptorPaths.includes(descriptorPath)) continue;
+
+    const previous = await readDescriptor(
+      ctx.root,
+      descriptorPath,
+      objectDescriptorSchema,
+    );
+    if (previous && previous.identity.canonical !== identity.canonical) {
+      throw new AdtFlowError(
+        'working_tree_diverged',
+        'An indexed descriptor identity does not match the omitted object.',
+        { object: identity.canonical },
+      );
+    }
+    if (previous && previous.state !== 'omitted') {
+      // A previously materialized object remains the authoritative file map.
+      // Its component-level omission is retained in the partial report rather
+      // than replacing known source ownership with an empty descriptor.
+      accum.descriptorPaths.push(descriptorPath);
+      continue;
+    }
+    if (previous?.state === 'omitted') {
+      accum.ownedPaths.add(descriptorPath);
+      accum.ownedOwners.set(descriptorPath, identity.canonical);
+    }
+
+    accum.desired.push({
+      path: descriptorPath,
+      content: stableJson({
+        schemaVersion: 1,
+        formatVersion: 1,
+        identity: {
+          canonical: identity.canonical,
+          pgmid: identity.pgmid,
+          type: identity.type,
+          name: identity.name,
+        },
+        state: 'omitted',
+        packagePath: [],
+        selections: [],
+        ownedFiles: [],
+        omissions: entries
+          .map((entry) => ({
+            component: entry.component.id,
+            diagnostic: omissionDiagnostic(entry),
+            ...(entry.sourceTransport
+              ? { sourceTransport: entry.sourceTransport }
+              : {}),
+          }))
+          .sort((left, right) =>
+            compareStrings(
+              `${left.component}/${left.diagnostic}/${left.sourceTransport ?? ''}`,
+              `${right.component}/${right.diagnostic}/${right.sourceTransport ?? ''}`,
+            ),
+          ),
+        configDigest: ctx.configDigest,
+        formatDigest: ctx.formatDigest,
+      }),
+      role: 'metadata',
+      owner: identity.canonical,
+    });
+    accum.descriptorPaths.push(descriptorPath);
+  }
+}
+
 function buildCheckoutResult(
   ctx: CheckoutContext,
   manifest: TransportSourceManifest,
@@ -1421,6 +1524,12 @@ async function checkoutFlow(
     ctx,
     manifestContext,
     pendingOwnership,
+  );
+  await addOmittedObjectDescriptors(
+    ctx,
+    manifestContext.manifest,
+    manifestContext.skipped,
+    processed,
   );
   await addTransportDescriptors(
     ctx,
