@@ -19,15 +19,12 @@ engines:
   opengrep:
     exclude_paths: []
   remark-lint:
-    # Disabled: it is the only engine producing issues here, and the SARIF
-    # formatter crashes (MalformedInputException) while serialising its
+    # Excluded entirely: it is the only engine producing issues here, and the
+    # SARIF formatter crashes (MalformedInputException) while serialising its
     # results — upstream bug codacy/codacy-analysis-cli#521. Markdown style
-    # linting has no security value for this scan.
-    enabled: false
+    # linting has no security value for this scan. `enabled: false` is not
+    # honoured by codacy-analysis-cli 4.0.0, so the engine is starved of
+    # files instead.
     exclude_paths:
-      # Generated release notes contain markdown constructs (e.g. `[bot]`)
-      # that are not intended as reference links
-      - '**/CHANGELOG.md'
-      # Prompt frontmatter uses bracket placeholders that remark-lint treats
-      # as undefined references
-      - '.github/prompts/*.prompt.md'
+      - '**'
+      - '*'
