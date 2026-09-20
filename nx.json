@@ -83,7 +83,6 @@
   ],
   "release": {
     "projects": ["packages/*", "tools/p2-cli"],
-    "projectsRelationship": "independent",
     "version": {
       "preVersionCommand": "npx nx run-many -t build",
       "conventionalCommits": true,
@@ -92,16 +91,17 @@
     },
     "changelog": {
       "automaticFromRef": true,
-      "projectChangelogs": {
+      "workspaceChangelog": {
         "createRelease": "github"
-      }
+      },
+      "projectChangelogs": true
     },
     "git": {
-      "commitMessage": "chore(release): publish [skip ci]",
+      "commitMessage": "chore(release): publish {version} [skip ci]",
       "tag": true
     },
     "releaseTag": {
-      "pattern": "{projectName}@{version}"
+      "pattern": "v{version}"
     }
   },
   "targetDefaults": {

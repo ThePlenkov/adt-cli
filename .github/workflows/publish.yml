@@ -1,10 +1,7 @@
 name: Publish
 
 on:
-  workflow_dispatch:
-  # Auto-trigger on version tags. Under `projectsRelationship: independent`
-  # each release creates one tag per versioned project ({project}@{version});
-  # 'v*' is kept for manual unified tags. NOTE: tags pushed by release.yml's
+  # Auto-trigger on version tags. NOTE: tags pushed by release.yml's
   # GITHUB_TOKEN do NOT cascade-trigger this workflow (GitHub Actions by
   # design) — release.yml dispatches us explicitly on `main`. This trigger
   # only fires for tags pushed by a human. We intentionally do NOT use
@@ -17,7 +14,6 @@ on:
   # `npm trust github … --file publish.yml`).
   push:
     tags:
-      - '*@*'
       - 'v*'
   workflow_call:
     inputs:
@@ -25,6 +21,22 @@ on:
         description: 'Ref to publish from (tag, branch or sha), defaults to the ref that triggered the workflow'
         required: false
         type: string
+      affected_only:
+        description: 'Publish only affected packages (+ internal deps)'
+        required: false
+        default: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Ref to publish from (tag, branch or sha), defaults to the dispatch ref'
+        required: false
+        type: string
+      affected_only:
+        description: 'Publish only affected packages (+ internal deps). Uncheck to publish all'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   publish:
@@ -43,6 +55,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ inputs.version || github.ref_name }}
+          fetch-depth: 0 # needed for `nx show projects --affected` and prev-tag lookup
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -144,10 +157,42 @@ jobs:
         shell: bash
 
       - name: Publish packages
+        # affected_only (default): publish only projects changed since the
+        # previous release tag + their internal deps. nx runs the
+        # nx-release-publish target with `dependsOn: ^nx-release-publish`,
+        # so every affected package's unpublished deps are published first
+        # — required because internal deps are exact-pinned to the new
+        # release version. Untouched packages keep their last published
+        # version on npm, which makes `npm view <pkg>` answer "when did
+        # this package last change?".
         # --nxBail=false: a single package failing must not cascade-skip
         # its dependents — publish everything that can publish so the
         # registry state stays as complete as possible.
-        run: ./node_modules/.bin/nx release publish --nxBail=false
+        id: pub
+        run: |
+          if [ "${{ inputs.affected_only }}" != "false" ]; then
+            PREV_TAG=$(git describe --tags --abbrev=0 --match='v*' 'HEAD^' 2>/dev/null || true)
+            if [ -z "$PREV_TAG" ]; then
+              echo "No previous release tag found — publishing everything"
+              echo "affected=adt-cli,adt-mcp,adt" >> "$GITHUB_OUTPUT"
+              ./node_modules/.bin/nx release publish --nxBail=false
+              exit 0
+            fi
+            # head=HEAD^: the checked-out ref IS the release commit, which
+            # touches every package.json — counting it would mark all
+            # projects affected and defeat the filter.
+            AFFECTED=$(./node_modules/.bin/nx show projects --affected --base="$PREV_TAG" --head='HEAD^' | paste -sd, -)
+            echo "Affected since $PREV_TAG: ${AFFECTED:-<none>}"
+            echo "affected=$AFFECTED" >> "$GITHUB_OUTPUT"
+            if [ -z "$AFFECTED" ]; then
+              echo "Nothing affected — nothing to publish"
+              exit 0
+            fi
+            ./node_modules/.bin/nx release publish --projects "$AFFECTED" --nxBail=false
+          else
+            echo "affected=adt-cli,adt-mcp,adt" >> "$GITHUB_OUTPUT"
+            ./node_modules/.bin/nx release publish --nxBail=false
+          fi
         shell: bash
         env:
           NPM_CONFIG_PROVENANCE: true
@@ -163,19 +208,29 @@ jobs:
         # just-published packages in isolation and execute them.
         run: |
           set -e
-          # Pin each package's exact version from the checked-out ref —
-          # under independent versioning there is no single release
-          # version, and the "latest" dist-tag plus fresh version metadata
-          # lag on registry read replicas for minutes (v0.4.7 smoke
-          # initially resolved adt-mcp@0.4.6 and a not-yet-replicated
-          # adt-schemas@0.4.7). Budget ~8 min of retries.
-          CLI_V=$(node -p "require('${{ github.workspace }}/packages/adt-cli/package.json').version")
-          MCP_V=$(node -p "require('${{ github.workspace }}/packages/adt-mcp/package.json').version")
-          ADT_V=$(node -p "require('${{ github.workspace }}/packages/adt/package.json').version")
-          echo "Smoke versions: adt-cli=$CLI_V adt-mcp=$MCP_V adt=$ADT_V"
+          # Packages released in this run must reach their disk version on
+          # npm — retry until they do (registry read replicas lag for
+          # minutes; the v0.4.7 smoke resolved a stale adt-mcp@0.4.6).
+          # Packages NOT in the release keep their latest published
+          # version — resolving latest for them is correct, not stale.
+          AFFECTED=",${{ steps.pub.outputs.affected }},"
+          in_set() { case "$AFFECTED" in *",$1,"*) return 0;; *) return 1;; esac; }
+          disk_ver() { node -p "require('${{ github.workspace }}/packages/$1/package.json').version"; }
+          want_ver() {
+            # $1=nx project name $2=npm package name
+            if in_set "$1"; then
+              disk_ver "$1"
+            else
+              npm view "$2" version --loglevel=error
+            fi
+          }
           mkdir -p /tmp/adt-smoke && cd /tmp/adt-smoke
           npm init -y >/dev/null
           for i in $(seq 1 15); do
+            CLI_V=$(want_ver adt-cli @abapify/adt-cli)
+            MCP_V=$(want_ver adt-mcp @abapify/adt-mcp)
+            ADT_V=$(want_ver adt @abapify/adt)
+            echo "attempt $i — smoke versions: adt-cli=$CLI_V adt-mcp=$MCP_V adt=$ADT_V"
             if npm install "@abapify/adt-cli@${CLI_V}" "@abapify/adt-mcp@${MCP_V}" "@abapify/adt@${ADT_V}" \
                  --no-fund --no-audit --loglevel=error; then
               break

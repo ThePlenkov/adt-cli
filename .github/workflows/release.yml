@@ -2,11 +2,13 @@ name: Release
 
 on:
   # Semantic auto-release: every push to main lets `nx release` inspect
-  # conventional commits since each project's last tag and version only
-  # the affected projects (+ dependents needing a new dep range). Pushes
-  # with no feat/fix commits produce no release and exit early. Release
-  # commits carry `[skip ci]` and are pushed by GITHUB_TOKEN, so they
-  # never retrigger this workflow.
+  # conventional commits since the last release tag. Versioning is fixed —
+  # every package.json bumps to the same release version — but publish.yml
+  # publishes only affected packages (+ internal deps) by default, so npm
+  # versions only advance where code actually changed. Pushes with no
+  # feat/fix commits produce no release and exit early. Release commits
+  # carry `[skip ci]` and are pushed by GITHUB_TOKEN, so they never
+  # retrigger this workflow.
   push:
     branches: [main]
   workflow_dispatch:
@@ -34,10 +36,10 @@ on:
         required: false
         default: false
         type: boolean
-      release_all:
-        description: 'Version ALL release projects (ignores conventional-commit scoping)'
+      affected_only:
+        description: 'Publish only affected packages (+ internal deps). Uncheck to publish all'
         required: false
-        default: false
+        default: true
         type: boolean
       publish:
         description: 'Publish packages to npm after releasing'
@@ -107,45 +109,29 @@ jobs:
 
       - name: Version, changelog & tag (dry run)
         if: ${{ inputs.dry_run }}
-        run: |
-          if [ "${{ inputs.release_all }}" = "true" ]; then
-            # Force-version every release project with an explicit specifier
-            PROJECTS=$(for d in packages/* tools/p2-cli; do basename "$d"; done | paste -sd,)
-            SPEC="${{ inputs.specifier != 'auto' && inputs.specifier || 'patch' }}"
-            npx nx release "$SPEC" --projects "$PROJECTS" --verbose --dry-run
-          else
-            npx nx release ${{ inputs.specifier != 'auto' && inputs.specifier || '' }} --verbose --dry-run ${{ inputs.first_release && '--first-release' || '' }}
-          fi
+        run: npx nx release ${{ inputs.specifier != 'auto' && inputs.specifier || '' }} --verbose --dry-run ${{ inputs.first_release && '--first-release' || '' }}
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Version, changelog & tag
         if: ${{ !inputs.dry_run }}
-        run: |
-          if [ "${{ inputs.release_all }}" = "true" ]; then
-            # Force-version every release project with an explicit specifier
-            PROJECTS=$(for d in packages/* tools/p2-cli; do basename "$d"; done | paste -sd,)
-            SPEC="${{ inputs.specifier != 'auto' && inputs.specifier || 'patch' }}"
-            npx nx release "$SPEC" --projects "$PROJECTS" --verbose --skip-publish
-          else
-            npx nx release ${{ inputs.specifier != 'auto' && inputs.specifier || '' }} --verbose --skip-publish ${{ inputs.first_release && '--first-release' || '' }}
-          fi
+        run: npx nx release ${{ inputs.specifier != 'auto' && inputs.specifier || '' }} --verbose --skip-publish ${{ inputs.first_release && '--first-release' || '' }}
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Collect release tags
-        # `nx release` under projectsRelationship=independent creates one
-        # tag per versioned project ({projectName}@{version}). No tags at
-        # HEAD means conventional commits found nothing to release —
-        # downstream steps are guarded on this output.
+        # `nx release` creates the v{version} tag at HEAD when it versioned
+        # something. No tag means conventional commits found nothing
+        # semver-worthy — downstream steps are guarded on this output.
         id: get_tags
         if: ${{ !inputs.dry_run }}
         run: |
           TAGS=$(git tag --points-at HEAD | sort | paste -sd, -)
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
           echo "first_tag=$(echo "$TAGS" | cut -d, -f1)" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           echo "release tags at HEAD: ${TAGS:-<none>}"
 
       - name: Push commit and tags
@@ -175,18 +161,24 @@ jobs:
 
       - name: Dispatch publish workflow
         # Auto-publish on push-triggered releases; on manual dispatch the
-        # `publish` checkbox decides.
+        # `publish` checkbox decides. `affected_only` is forwarded so
+        # publish.yml knows whether to publish the affected subset or all.
         if: ${{ !inputs.dry_run && steps.get_tags.outputs.tags != '' && (github.event_name == 'push' || inputs.publish) }}
         # Can't rely on `push: tags:` auto-trigger in publish.yml — events
         # caused by GITHUB_TOKEN pushes don't cascade to other workflows
         # (GitHub Actions by design). Invoke publish.yml via workflow_dispatch
         # so it runs with its own workflow_ref and our OIDC trusted
-        # publisher entries match. Ref `main` resolves to the release
-        # commit we just pushed.
+        # publisher entries match. We pass the release commit SHA as the
+        # `version` input so publish.yml checks out exactly this commit —
+        # a racing merge on main can't shift which tree gets published.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run publish.yml --ref main
+          if [ "${{ inputs.affected_only }}" = "false" ]; then
+            gh workflow run publish.yml --ref main -f affected_only=false -f "version=${{ steps.get_tags.outputs.sha }}"
+          else
+            gh workflow run publish.yml --ref main -f "version=${{ steps.get_tags.outputs.sha }}"
+          fi
 
   # Note: npm publishing is NOT wired up as `workflow_call` here. When
   # `publish.yml` is invoked via `uses:`, the resulting OIDC token's
