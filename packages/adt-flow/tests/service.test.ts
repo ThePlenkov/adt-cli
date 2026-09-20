@@ -757,7 +757,7 @@ describe('transport checkout', () => {
     expect(descriptor.objects).toContain(
       '.adt/objects/CLAS/zcl_zzz_inexact.clas.adt.json',
     );
-    const omitted = JSON.parse(
+    const omitted: unknown = JSON.parse(
       await readFile(
         join(workspace, '.adt/objects/CLAS/zcl_zzz_inexact.clas.adt.json'),
         'utf8',
