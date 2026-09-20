@@ -53,6 +53,10 @@ jobs:
           # Force 0 exit code to allow SARIF file generation
           # This will handover control about PR rejection to the GitHub side
           max-allowed-issues: 2147483647
+          # Keep wall-time bounded: run engines concurrently and cap each
+          # engine so a stuck tool cannot hang the job for hours
+          parallel: 4
+          tool-timeout: 15minutes
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
