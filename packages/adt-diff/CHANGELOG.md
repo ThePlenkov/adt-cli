@@ -1,3 +1,34 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **plugin:** FormatPlugin API foundation — E05 ([dbcf8fb1](https://github.com/abapify/adt-cli/commit/dbcf8fb1))
+- **adt-diff:** add --raw mode, fix abapLanguageVersion auth issue, defer CLAS include saves ([39997c2d](https://github.com/abapify/adt-cli/commit/39997c2d))
+- **adt-diff:** rename --format to --source, add annotation filtering for CDS comparison ([f12ad872](https://github.com/abapify/adt-cli/commit/f12ad872))
+- **adt-diff:** support multi-file and glob patterns in diff command ([120055ba](https://github.com/abapify/adt-cli/commit/120055ba))
+- **adt-diff:** add --format ddl option and fix CDS DDL generation ([58a44808](https://github.com/abapify/adt-cli/commit/58a44808))
+- add adt diff command and fix CDS-to-abapGit serialization ([e79ecb8f](https://github.com/abapify/adt-cli/commit/e79ecb8f))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+- resolve all pre-existing typecheck + test failures — QC1 ([c1970023](https://github.com/abapify/adt-cli/commit/c1970023))
+- **adt-diff:** align zage_tabl test expectations with fixture ([63448d2d](https://github.com/abapify/adt-cli/commit/63448d2d))
+- **adt-diff:** use .acds extension for CDS DDL diff display ([2b9289fb](https://github.com/abapify/adt-cli/commit/2b9289fb))
+
+### 🧱 Updated Dependencies
+
+- Updated adt-plugin-abapgit to 0.5.0
+- Updated adt-contracts to 0.5.0
+- Updated @abapify/adt-fixtures to 0.5.0
+- Updated adt-plugin to 0.5.0
+- Updated adk to 0.5.0
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for adt-diff to align it with other projects, there were no code changes.

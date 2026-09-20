@@ -1,3 +1,22 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **acds:** full CDS DDL/DCL grammar + AST walker + validators — E09 ([b52ec71b](https://github.com/abapify/adt-cli/commit/b52ec71b))
+- add adt diff command and fix CDS-to-abapGit serialization ([e79ecb8f](https://github.com/abapify/adt-cli/commit/e79ecb8f))
+- abapGit roundtrip - export, deploy, and structure support ([29859632](https://github.com/abapify/adt-cli/commit/29859632))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+- **pr-103:** address review comments — type safety, parity, harness, policy ([d5b14cd9](https://github.com/abapify/adt-cli/commit/d5b14cd9))
+- resolve SonarQube quality gate failures (security hotspot + duplication) ([8de6152a](https://github.com/abapify/adt-cli/commit/8de6152a))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for @abapify/acds to align it with other projects, there were no code changes.

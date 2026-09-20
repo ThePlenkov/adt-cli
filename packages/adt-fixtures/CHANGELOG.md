@@ -1,3 +1,61 @@
+## 0.5.0 (2026-09-20)
+
+### 🚀 Features
+
+- **cds:** support CDS and RAP ABAP File Formats ([#183](https://github.com/abapify/adt-cli/pull/183))
+- **adt-mcp:** arc-1 SAPRead parity for get_source ([#162](https://github.com/abapify/adt-cli/pull/162))
+- **badi:** classic BAdI read via vit/wb ([#153](https://github.com/abapify/adt-cli/pull/153), [#154](https://github.com/abapify/adt-cli/pull/154))
+- **badi:** add `adt badi <name> --implementations` ([#153](https://github.com/abapify/adt-cli/pull/153))
+- **cts:** create verified transport tasks ([99447319](https://github.com/abapify/adt-cli/commit/99447319))
+- **adt-mcp:** scope ATC runs without raw URIs ([6665107c](https://github.com/abapify/adt-cli/commit/6665107c))
+- **source-history:** add bounded ADT source history support ([04ecb578](https://github.com/abapify/adt-cli/commit/04ecb578))
+- **gcts:** format.export — complete checkin roundtrip for gCTS — QC2 ([5590ea19](https://github.com/abapify/adt-cli/commit/5590ea19))
+- **real-e2e:** TRL backfill sweep + WB where-used 2-step POST fix ([d64bd853](https://github.com/abapify/adt-cli/commit/d64bd853))
+- **flp:** Fiori Launchpad read-only inventory — E14 ([eb890f58](https://github.com/abapify/adt-cli/commit/eb890f58))
+- **rfc:** SOAP-over-HTTP RFC transport + adt rfc command — E13 ([a7c491bd](https://github.com/abapify/adt-cli/commit/a7c491bd))
+- **badi:** BAdI CRUD + real-SAP e2e harness — E03 ([d36945ba](https://github.com/abapify/adt-cli/commit/d36945ba))
+- **rap:** SRVB (Service Binding) CRUD + publish/unpublish — E12 ([55c9b7e5](https://github.com/abapify/adt-cli/commit/55c9b7e5))
+- **rap:** SRVD (Service Definition) CRUD — E11 ([bf35ad21](https://github.com/abapify/adt-cli/commit/bf35ad21))
+- **rap:** BDEF (Behavior Definition) CRUD — E10 ([dd02c106](https://github.com/abapify/adt-cli/commit/dd02c106))
+- **gcts-cli:** gCTS command plugin — E07 ([01295e4e](https://github.com/abapify/adt-cli/commit/01295e4e))
+- **strust:** STRUST PSE/cert CLI + MCP — E04 ([c2bc6699](https://github.com/abapify/adt-cli/commit/c2bc6699))
+- **incl:** INCL CLI + MCP — E01 ([8aaeb898](https://github.com/abapify/adt-cli/commit/8aaeb898))
+- **aunit:** ABAP Unit code coverage — JaCoCo output + CLI/MCP parity ([ad12d14b](https://github.com/abapify/adt-cli/commit/ad12d14b))
+- **contracts:** add datapreview, CTS useraction, DDL/DCL, tablesettings ([d46415d4](https://github.com/abapify/adt-cli/commit/d46415d4))
+- **adt:** add user lookup command and system contract ([3257eeec](https://github.com/abapify/adt-cli/commit/3257eeec))
+- add PROG (Program) and FUGR (Function Group) ABAP object type support ([789f55b0](https://github.com/abapify/adt-cli/commit/789f55b0))
+- move all packages to @abapify namespace for GitHub Registry publishing ([82b2aa41](https://github.com/abapify/adt-cli/commit/82b2aa41))
+- **devc:** implement DEVC package support with type inference ([2d314008](https://github.com/abapify/adt-cli/commit/2d314008))
+
+### 🩹 Fixes
+
+- **adt-mcp:** require HTTPS for HTTP transport ([#207](https://github.com/abapify/adt-cli/pull/207))
+- **import:** support typed CDS and RAP imports ([#185](https://github.com/abapify/adt-cli/pull/185))
+- **aunit:** send SAP coverage query bodies ([#179](https://github.com/abapify/adt-cli/pull/179))
+- **aunit:** parse external coverage measurement URI ([#176](https://github.com/abapify/adt-cli/pull/176))
+- **aunit:** preserve coverage measurement links ([#175](https://github.com/abapify/adt-cli/pull/175))
+- CTS lifecycle follow-ups — lock correlation, release details, flow scope ([#157](https://github.com/abapify/adt-cli/pull/157))
+- verify CTS lifecycle, task creation, and lock correlation ([#151](https://github.com/abapify/adt-cli/pull/151))
+- **cts:** reconcile task and source lifecycle ([34469d91](https://github.com/abapify/adt-cli/commit/34469d91))
+- **cts:** harden task creation verification ([bb8d5862](https://github.com/abapify/adt-cli/commit/bb8d5862))
+- verify CTS lifecycle and task deltas ([cbe83c5b](https://github.com/abapify/adt-cli/commit/cbe83c5b))
+- **ci:** resolve CodeQL ReDoS + code-quality findings, fix main CI ([9670d6df](https://github.com/abapify/adt-cli/commit/9670d6df))
+- address Copilot and Devin review findings ([c897a350](https://github.com/abapify/adt-cli/commit/c897a350))
+- add missing ts-morph and adk deps, bump to 0.1.10 ([ed143378](https://github.com/abapify/adt-cli/commit/ed143378))
+- add missing zod dependency to adt-schemas and ts-xsd, bump to 0.1.9 ([c85f3a8c](https://github.com/abapify/adt-cli/commit/c85f3a8c))
+- separate release and publish pipelines; mark adt-fixtures as private ([4f71d1e3](https://github.com/abapify/adt-cli/commit/4f71d1e3))
+- resolve typecheck failures across workspace ([e6d46651](https://github.com/abapify/adt-cli/commit/e6d46651))
+- **ci:** fix format and lint errors to unblock CI pipeline ([74f4a1d9](https://github.com/abapify/adt-cli/commit/74f4a1d9))
+
+### ❤️ Thank You
+
+- Claude
+- Cursor @cursoragent
+- Devin @devin-ai-integration[bot]
+- Devin AI @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for @abapify/adt-fixtures to align it with other projects, there were no code changes.

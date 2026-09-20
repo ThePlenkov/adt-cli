@@ -1,3 +1,44 @@
+## 0.5.0 (2026-09-20)
+
+### 🚀 Features
+
+- **gcts:** Full AFF abap-file-formats support — Wave 0+1+2 ([#193](https://github.com/abapify/adt-cli/pull/193))
+- **source-history:** add bounded ADT source history support ([04ecb578](https://github.com/abapify/adt-cli/commit/04ecb578))
+- **adk,adt-cli:** fix ETag invalidation after lock acquisition, improve DEVC subpackage filtering, add --objects to package get ([45fd3873](https://github.com/abapify/adt-cli/commit/45fd3873))
+- **adt-export:** remove full-repo scan fallback, add package validation and cascade skip logic ([051b39e0](https://github.com/abapify/adt-cli/commit/051b39e0))
+- **adk,adt-cli:** centralize lock operations in LockService, add force-unlock, remove duplicate lock logic ([76f45210](https://github.com/abapify/adt-cli/commit/76f45210))
+- **adk:** add FunctionModule support with POST-then-PUT save flow, fix ETag refresh after metadata PUT ([18746eb6](https://github.com/abapify/adt-cli/commit/18746eb6))
+- **adt-diff:** add --raw mode, fix abapLanguageVersion auth issue, defer CLAS include saves ([39997c2d](https://github.com/abapify/adt-cli/commit/39997c2d))
+- abapGit roundtrip - export, deploy, and structure support ([29859632](https://github.com/abapify/adt-cli/commit/29859632))
+- remove OAT format everywhere, make abapgit the default ([d7a82b41](https://github.com/abapify/adt-cli/commit/d7a82b41))
+- optimize export by skipping unchanged sources and auto-creating packages ([015c9676](https://github.com/abapify/adt-cli/commit/015c9676))
+- fix ADT export XML serialization and live-test on BTP + on-prem ([a58218fd](https://github.com/abapify/adt-cli/commit/a58218fd))
+- move all packages to @abapify namespace for GitHub Registry publishing ([82b2aa41](https://github.com/abapify/adt-cli/commit/82b2aa41))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+- **security:** resolve all remaining CodeQL alerts with source-level fixes ([678f3991](https://github.com/abapify/adt-cli/commit/678f3991))
+- resolve SonarQube quality gate failures (security hotspot + duplication) ([8de6152a](https://github.com/abapify/adt-cli/commit/8de6152a))
+- **adt-export:** convert static import of lazy-loaded library to dynamic import ([5c9f3396](https://github.com/abapify/adt-cli/commit/5c9f3396))
+- add missing ts-morph and adk deps, bump to 0.1.10 ([ed143378](https://github.com/abapify/adt-cli/commit/ed143378))
+- add missing zod dependency to adt-schemas and ts-xsd, bump to 0.1.9 ([c85f3a8c](https://github.com/abapify/adt-cli/commit/c85f3a8c))
+- address all Qodo review comments from today's PRs (#44-#49) ([#44](https://github.com/abapify/adt-cli/issues/44), [#49](https://github.com/abapify/adt-cli/issues/49))
+
+### 🧱 Updated Dependencies
+
+- Updated adt-plugin-abapgit to 0.5.0
+- Updated adt-plugin to 0.5.0
+- Updated adt-locks to 0.4.8
+- Updated adk to 0.5.0
+
+### ❤️ Thank You
+
+- Claude
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for adt-export to align it with other projects, there were no code changes.

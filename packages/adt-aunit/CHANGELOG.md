@@ -1,3 +1,34 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **function:** FUGR/FUNC CLI + MCP — E02 ([99b85330](https://github.com/abapify/adt-cli/commit/99b85330))
+- **aunit:** ABAP Unit code coverage — JaCoCo output + CLI/MCP parity ([ad12d14b](https://github.com/abapify/adt-cli/commit/ad12d14b))
+- add AUnit sonar format, improved exit codes, and ATC customizing command ([66f3f10b](https://github.com/abapify/adt-cli/commit/66f3f10b))
+
+### 🩹 Fixes
+
+- **aunit:** emit GitLab-resolvable JaCoCo paths ([#181](https://github.com/abapify/adt-cli/pull/181))
+- **aunit:** send SAP coverage query bodies ([#179](https://github.com/abapify/adt-cli/pull/179))
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+- **pr-103:** address review comments — type safety, parity, harness, policy ([d5b14cd9](https://github.com/abapify/adt-cli/commit/d5b14cd9))
+- resolve all pre-existing typecheck + test failures — QC1 ([c1970023](https://github.com/abapify/adt-cli/commit/c1970023))
+- **sonarqube:** fix code quality issues from PR #76 ([#76](https://github.com/abapify/adt-cli/issues/76))
+
+### 🧱 Updated Dependencies
+
+- Updated adt-plugin-abapgit to 0.5.0
+- Updated adt-contracts to 0.5.0
+- Updated @abapify/adt-fixtures to 0.5.0
+- Updated adt-schemas to 0.5.0
+- Updated adt-plugin to 0.5.0
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for adt-aunit to align it with other projects, there were no code changes.

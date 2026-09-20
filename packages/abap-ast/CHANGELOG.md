@@ -1,3 +1,28 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **openai-codegen:** Wave 1 v2 — AST ABAPDoc, naming+CLI, 4 emitters + templates ([abb0dd53](https://github.com/abapify/adt-cli/commit/abb0dd53))
+- **openai-codegen:** deterministic OpenAPI → ABAP client codegen ([8393c685](https://github.com/abapify/adt-cli/commit/8393c685))
+- **openai-codegen:** Wave 2 — printer, type emitter, inline cloud runtime ([224a7672](https://github.com/abapify/adt-cli/commit/224a7672))
+- **openai-codegen:** Wave 1 — AST nodes, OAS loader, target profiles ([2785c9eb](https://github.com/abapify/adt-cli/commit/2785c9eb))
+- **openai-codegen:** scaffold abap-ast + openai-codegen packages and openspec change ([13147d77](https://github.com/abapify/adt-cli/commit/13147d77))
+- **openai-codegen:** Wave 2 — printer, type emitter, inline cloud runtime ([72e341f9](https://github.com/abapify/adt-cli/commit/72e341f9))
+- **openai-codegen:** Wave 1 — AST nodes, OAS loader, target profiles ([d58b40ab](https://github.com/abapify/adt-cli/commit/d58b40ab))
+- **openai-codegen:** scaffold abap-ast + openai-codegen packages and openspec change ([43170b24](https://github.com/abapify/adt-cli/commit/43170b24))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+- **openai-codegen,abap-ast:** more PR #109 review fixes ([#109](https://github.com/abapify/adt-cli/issues/109))
+- **openai-codegen,abap-ast:** address PR #109 review feedback + CI ([#109](https://github.com/abapify/adt-cli/issues/109))
+- **openai-codegen,abap-ast:** Steampunk activation fixes ([3944f12c](https://github.com/abapify/adt-cli/commit/3944f12c))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for @abapify/abap-ast to align it with other projects, there were no code changes.
