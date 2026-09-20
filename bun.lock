@@ -111,6 +111,20 @@
         "@abapify/adt-schemas": "0.4.7",
       },
     },
+    "packages/adt": {
+      "name": "@abapify/adt",
+      "version": "0.4.7",
+      "bin": {
+        "adt": "./dist/adt.mjs",
+      },
+      "devDependencies": {
+        "@abapify/adt-atc": "0.4.7",
+        "@abapify/adt-cli": "0.4.7",
+        "@abapify/adt-codegen": "0.4.7",
+        "@abapify/adt-diff": "0.4.7",
+        "@abapify/adt-export": "0.4.7",
+      },
+    },
     "packages/adt-atc": {
       "name": "@abapify/adt-atc",
       "version": "0.4.7",
@@ -604,6 +618,8 @@
     "@abapify/aclass": ["@abapify/aclass@workspace:packages/aclass"],
 
     "@abapify/adk": ["@abapify/adk@workspace:packages/adk"],
+
+    "@abapify/adt": ["@abapify/adt@workspace:packages/adt"],
 
     "@abapify/adt-atc": ["@abapify/adt-atc@workspace:packages/adt-atc"],
 
