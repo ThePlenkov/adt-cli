@@ -1,4 +1,8 @@
 ---
+exclude_paths:
+  # Non-UTF8 binary fixture — crashes the SARIF formatter
+  # (MalformedInputException) when a tool result references it
+  - 'packages/adt-plugin-abapgit/tests/fixtures/smim/ztest_mime.smim.ztest_mime.png'
 engines:
   csslint:
     exclude_paths:
