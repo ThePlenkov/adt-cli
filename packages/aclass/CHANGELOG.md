@@ -1,3 +1,26 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **aclass:** typed EventDecl + forward-class decl + abaplint gate ([4db5da05](https://github.com/abapify/adt-cli/commit/4db5da05))
+- **openai-codegen:** Wave 3 — aclass parse-gate + lexer extensions ([af02c42c](https://github.com/abapify/adt-cli/commit/af02c42c))
+- **aclass:** Wave 1+2 — parser, typed AST, fixtures, roundtrip ([c0325729](https://github.com/abapify/adt-cli/commit/c0325729))
+- **aclass:** Wave 0 — package skeleton + Chevrotain lexer ([64d91045](https://github.com/abapify/adt-cli/commit/64d91045))
+- **aclass:** Wave 0 — package skeleton + Chevrotain lexer ([4241a89b](https://github.com/abapify/adt-cli/commit/4241a89b))
+
+### 🩹 Fixes
+
+- **release:** add repository metadata for sigstore provenance ([c9ff002e](https://github.com/abapify/adt-cli/commit/c9ff002e))
+- **aclass:** qualified method names + keyword method names ([c2bf3a84](https://github.com/abapify/adt-cli/commit/c2bf3a84))
+- **aclass+openai-codegen:** address PR #111 review findings ([#111](https://github.com/abapify/adt-cli/issues/111))
+- **aclass:** proper regex metacharacter escaping in `kw()` helper ([8757714e](https://github.com/abapify/adt-cli/commit/8757714e))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for @abapify/aclass to align it with other projects, there were no code changes.

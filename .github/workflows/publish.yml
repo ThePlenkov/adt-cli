@@ -2,21 +2,27 @@ name: Publish
 
 on:
   workflow_dispatch:
-  # Auto-trigger on version tags pushed by the Release workflow. We
-  # intentionally do NOT use `workflow_call` from release.yml: when
-  # publish.yml runs as a reusable workflow, the OIDC token's claims
-  # reflect the CALLER (release.yml) and npm's trusted publisher
-  # matcher rejects them, even though `job_workflow_ref` is publish.yml.
-  # Running on tag push gives us workflow_ref=publish.yml directly,
-  # which is what every trusted publisher entry on npmjs is registered
-  # for (via `npm trust github … --file publish.yml`).
+  # Auto-trigger on version tags. Under `projectsRelationship: independent`
+  # each release creates one tag per versioned project ({project}@{version});
+  # 'v*' is kept for manual unified tags. NOTE: tags pushed by release.yml's
+  # GITHUB_TOKEN do NOT cascade-trigger this workflow (GitHub Actions by
+  # design) — release.yml dispatches us explicitly on `main`. This trigger
+  # only fires for tags pushed by a human. We intentionally do NOT use
+  # `workflow_call` from release.yml: when publish.yml runs as a reusable
+  # workflow, the OIDC token's claims reflect the CALLER (release.yml) and
+  # npm's trusted publisher matcher rejects them, even though
+  # `job_workflow_ref` is publish.yml. Running on tag push / our own
+  # dispatch gives us workflow_ref=publish.yml directly, which is what
+  # every trusted publisher entry on npmjs is registered for (via
+  # `npm trust github … --file publish.yml`).
   push:
     tags:
+      - '*@*'
       - 'v*'
   workflow_call:
     inputs:
       version:
-        description: 'Release version tag to publish (e.g. v1.2.3), defaults to the ref that triggered the workflow'
+        description: 'Ref to publish from (tag, branch or sha), defaults to the ref that triggered the workflow'
         required: false
         type: string
 
@@ -157,15 +163,20 @@ jobs:
         # just-published packages in isolation and execute them.
         run: |
           set -e
-          # Pin the exact release version: the "latest" dist-tag and fresh
-          # version metadata lag on registry read replicas for minutes —
-          # v0.4.7 smoke initially resolved adt-mcp@0.4.6 and a not-yet-
-          # replicated adt-schemas@0.4.7. Budget ~8 min of retries.
-          VERSION="${GITHUB_REF_NAME#v}"
+          # Pin each package's exact version from the checked-out ref —
+          # under independent versioning there is no single release
+          # version, and the "latest" dist-tag plus fresh version metadata
+          # lag on registry read replicas for minutes (v0.4.7 smoke
+          # initially resolved adt-mcp@0.4.6 and a not-yet-replicated
+          # adt-schemas@0.4.7). Budget ~8 min of retries.
+          CLI_V=$(node -p "require('${{ github.workspace }}/packages/adt-cli/package.json').version")
+          MCP_V=$(node -p "require('${{ github.workspace }}/packages/adt-mcp/package.json').version")
+          ADT_V=$(node -p "require('${{ github.workspace }}/packages/adt/package.json').version")
+          echo "Smoke versions: adt-cli=$CLI_V adt-mcp=$MCP_V adt=$ADT_V"
           mkdir -p /tmp/adt-smoke && cd /tmp/adt-smoke
           npm init -y >/dev/null
           for i in $(seq 1 15); do
-            if npm install "@abapify/adt-cli@${VERSION}" "@abapify/adt-mcp@${VERSION}" "@abapify/adt@${VERSION}" \
+            if npm install "@abapify/adt-cli@${CLI_V}" "@abapify/adt-mcp@${MCP_V}" "@abapify/adt@${ADT_V}" \
                  --no-fund --no-audit --loglevel=error; then
               break
             fi

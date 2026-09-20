@@ -1,3 +1,28 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **gcts:** Full AFF abap-file-formats support — Wave 0+1+2 ([#193](https://github.com/abapify/adt-cli/pull/193))
+- **gcts:** format.export — complete checkin roundtrip for gCTS — QC2 ([5590ea19](https://github.com/abapify/adt-cli/commit/5590ea19))
+- **gcts:** AFF/gCTS format plugin — E06 ([67676d24](https://github.com/abapify/adt-cli/commit/67676d24))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+- **ci:** resolve CodeQL ReDoS + code-quality findings, fix main CI ([9670d6df](https://github.com/abapify/adt-cli/commit/9670d6df))
+- resolve all pre-existing typecheck + test failures — QC1 ([c1970023](https://github.com/abapify/adt-cli/commit/c1970023))
+
+### 🧱 Updated Dependencies
+
+- Updated adt-plugin to 0.5.0
+- Updated adk to 0.5.0
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for adt-plugin-gcts to align it with other projects, there were no code changes.

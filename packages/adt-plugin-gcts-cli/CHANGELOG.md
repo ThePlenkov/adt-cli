@@ -1,3 +1,23 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **gcts-cli:** gCTS command plugin — E07 ([01295e4e](https://github.com/abapify/adt-cli/commit/01295e4e))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+
+### 🧱 Updated Dependencies
+
+- Updated adt-contracts to 0.5.0
+- Updated adt-plugin to 0.5.0
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for adt-plugin-gcts-cli to align it with other projects, there were no code changes.

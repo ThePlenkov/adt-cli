@@ -1,3 +1,24 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **rfc:** SOAP-over-HTTP RFC transport + adt rfc command — E13 ([a7c491bd](https://github.com/abapify/adt-cli/commit/a7c491bd))
+
+### 🩹 Fixes
+
+- **sonarcloud-review:** safe-guard JSON.stringify in S6551 helpers ([bd72acaf](https://github.com/abapify/adt-cli/commit/bd72acaf))
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+- replace TAG_RE loop with split-based tokenizer — CodeQL final ([8406863f](https://github.com/abapify/adt-cli/commit/8406863f))
+- drop CDATA branch from TAG_RE in adt-rfc — CodeQL final ([4f86b2c2](https://github.com/abapify/adt-cli/commit/4f86b2c2))
+- **security:** replace regex XML parsing with @xmldom/xmldom — CodeQL + Sonar ([3ef1f4cf](https://github.com/abapify/adt-cli/commit/3ef1f4cf))
+- **ci:** resolve CodeQL ReDoS + code-quality findings, fix main CI ([9670d6df](https://github.com/abapify/adt-cli/commit/9670d6df))
+- resolve all pre-existing typecheck + test failures — QC1 ([c1970023](https://github.com/abapify/adt-cli/commit/c1970023))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for adt-rfc to align it with other projects, there were no code changes.

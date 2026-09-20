@@ -1,3 +1,28 @@
+## 0.5.0 (2026-09-20)
+
+### 🚀 Features
+
+- **release:** setup Nx Release publishing with GitHub CI ([0243482f](https://github.com/abapify/adt-cli/commit/0243482f))
+- **adt-cli:** add interactive TUI editor for CTS tree configuration with optimistic locking ([4eb38c39](https://github.com/abapify/adt-cli/commit/4eb38c39))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/abapify/adt-cli/commit/85b29310))
+- add missing ts-morph and adk deps, bump to 0.1.10 ([ed143378](https://github.com/abapify/adt-cli/commit/ed143378))
+- add missing zod dependency to adt-schemas and ts-xsd, bump to 0.1.9 ([c85f3a8c](https://github.com/abapify/adt-cli/commit/c85f3a8c))
+- address all Qodo review comments from today's PRs (#44-#49) ([#44](https://github.com/abapify/adt-cli/issues/44), [#49](https://github.com/abapify/adt-cli/issues/49))
+- **asjson-parser:** add tsconfig: 'tsconfig.lib.json' to tsdown config to avoid references error ([c64128a8](https://github.com/abapify/adt-cli/commit/c64128a8))
+- **asjson-parser:** migrate from @nx/rollup to tsdown, drop nx@21 dep ([796a3b95](https://github.com/abapify/adt-cli/commit/796a3b95))
+- resolve all ESLint errors causing CI pipeline failures ([7c6e5128](https://github.com/abapify/adt-cli/commit/7c6e5128))
+- **ci:** fix format and lint errors to unblock CI pipeline ([74f4a1d9](https://github.com/abapify/adt-cli/commit/74f4a1d9))
+- format project.json files to resolve CI format check with NX environment variables ([3ade85a6](https://github.com/abapify/adt-cli/commit/3ade85a6))
+
+### ❤️ Thank You
+
+- Claude
+- Petr Plenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.7 (2026-09-18)
 
 This was a version bump only for asjson-parser to align it with other projects, there were no code changes.
