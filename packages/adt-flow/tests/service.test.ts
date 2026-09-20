@@ -754,6 +754,80 @@ describe('transport checkout', () => {
       await readFile(join(workspace, '.adt/tr/DEVK900001.json'), 'utf8'),
     );
     expect(descriptor.incomplete).toBe(true);
+    expect(descriptor.objects).toContain(
+      '.adt/objects/CLAS/zcl_zzz_inexact.clas.adt.json',
+    );
+    const omitted: unknown = JSON.parse(
+      await readFile(
+        join(workspace, '.adt/objects/CLAS/zcl_zzz_inexact.clas.adt.json'),
+        'utf8',
+      ),
+    );
+    expect(omitted).toMatchObject({
+      state: 'omitted',
+      identity: {
+        canonical: 'R3TR/CLAS/ZCL_ZZZ_INEXACT',
+        pgmid: 'R3TR',
+        type: 'CLAS',
+        name: 'ZCL_ZZZ_INEXACT',
+      },
+      ownedFiles: [],
+      selections: [],
+      omissions: [
+        {
+          component: 'main',
+          diagnostic: 'SOURCE_HISTORY_INTERVENING_VERSION',
+          sourceTransport: 'DEVK900001',
+        },
+      ],
+    });
+    await expect(
+      createAdtFlowService(ports).checkout({
+        root: workspace,
+        transports: ['DEVK900001'],
+        config,
+        partial: true,
+      }),
+    ).resolves.toMatchObject({
+      skipped: expect.arrayContaining([
+        expect.objectContaining({ object: 'CLAS/ZCL_ZZZ_INEXACT' }),
+      ]),
+    });
+  });
+
+  it('rejects a partial omission when its preserved indexed source was edited', async () => {
+    const workspace = await root();
+    let current = manifest('modified', version('before'), version('after'));
+    const ports = dependencies(() => current);
+    const flow = createAdtFlowService(ports);
+
+    await flow.checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      config,
+    });
+    await writeFile(
+      join(workspace, 'src/feature/zcl_sample.clas.abap'),
+      'local edit\n',
+    );
+    current = manifest('modified', version('before'), version('after'));
+    current.entries[0]!.exact = false;
+    current.entries[0]!.changeKind = 'ambiguous';
+    current.entries[0]!.diagnostic = {
+      code: 'SOURCE_HISTORY_INTERVENING_VERSION',
+      message: 'A version from another transport occurs inside this scope.',
+    };
+    ports.readSource.mockClear();
+
+    await expect(
+      flow.checkout({
+        root: workspace,
+        transports: ['DEVK900001'],
+        config,
+        partial: true,
+      }),
+    ).rejects.toMatchObject({ code: 'working_tree_diverged' });
+    expect(ports.readSource).not.toHaveBeenCalled();
   });
 
   it('skips unsupported objects while materializing supported objects from the same transport', async () => {
@@ -783,6 +857,41 @@ describe('transport checkout', () => {
     ]);
     expect(result.changed).toContain('src/feature/zcl_sample.clas.abap');
     expect(ports.loadObject).toHaveBeenCalledTimes(1);
+  });
+
+  it('indexes an unsupported partial object even without a diagnostic from SAP', async () => {
+    const workspace = await root();
+    const current = manifest('modified', version('before'), version('after'));
+    const unsupported = unsupportedEntry();
+    delete unsupported.diagnostic;
+    current.entries.push(unsupported);
+    const ports = dependencies(() => current);
+    ports.readSource.mockResolvedValue('stable source\n');
+    ports.loadObject.mockResolvedValue({
+      object: { name: 'ZCL_SAMPLE' },
+      packagePath: ['ZROOT', 'ZROOT_FEATURE'],
+    });
+
+    await createAdtFlowService(ports).checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      config,
+      partial: true,
+    });
+
+    const omitted = JSON.parse(
+      await readFile(
+        join(workspace, '.adt/objects/TABD/payhx01.tabd.adt.json'),
+        'utf8',
+      ),
+    );
+    expect(omitted.omissions).toEqual([
+      {
+        component: 'object',
+        diagnostic: 'UNSUPPORTED',
+        sourceTransport: 'DEVK900001',
+      },
+    ]);
   });
 
   it('skips an unsupported diagnostic even when its manifest change kind is ambiguous', async () => {

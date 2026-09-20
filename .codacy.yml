@@ -1,4 +1,14 @@
 ---
+exclude_paths:
+  # Non-UTF8 binary fixture — crashes the SARIF formatter
+  # (MalformedInputException) when a tool result references it
+  - 'packages/adt-plugin-abapgit/tests/fixtures/smim/ztest_mime.smim.ztest_mime.png'
+  # Uninitialised gitlinks and directory symlinks — unreadable as files and
+  # can crash the SARIF formatter when a tool result references them
+  - 'git_modules/**'
+  - '.devin/rules/**'
+  - '.devin/skills/**'
+  - '.windsurf/rules/**'
 engines:
   csslint:
     exclude_paths:
@@ -9,10 +19,12 @@ engines:
   opengrep:
     exclude_paths: []
   remark-lint:
+    # Excluded entirely: it is the only engine producing issues here, and the
+    # SARIF formatter crashes (MalformedInputException) while serialising its
+    # results — upstream bug codacy/codacy-analysis-cli#521. Markdown style
+    # linting has no security value for this scan. `enabled: false` is not
+    # honoured by codacy-analysis-cli 4.0.0, so the engine is starved of
+    # files instead.
     exclude_paths:
-      # Generated release notes contain markdown constructs (e.g. `[bot]`)
-      # that are not intended as reference links
-      - '**/CHANGELOG.md'
-      # Prompt frontmatter uses bracket placeholders that remark-lint treats
-      # as undefined references
-      - '.github/prompts/*.prompt.md'
+      - '**'
+      - '*'
