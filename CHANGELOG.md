@@ -1,3 +1,25 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **adt:** add @abapify/adt standalone bundle package ([6f0e57fa](https://github.com/abapify/adt-cli/commit/6f0e57fa))
+- **release:** independent per-package versioning + auto-release on main ([ccbc2a4a](https://github.com/abapify/adt-cli/commit/ccbc2a4a))
+
+### 🩹 Fixes
+
+- **adt-cli:** report real package version; fix typecheck regressions ([0dd4b802](https://github.com/abapify/adt-cli/commit/0dd4b802))
+- **adt-mcp:** drop src/lib/mock shims importing private adt-fixtures ([b4af1075](https://github.com/abapify/adt-cli/commit/b4af1075))
+- **cli:** hide plugin error stacks ([583ee8ec](https://github.com/abapify/adt-cli/commit/583ee8ec))
+- **cli:** sanitize typed plugin errors and gate messages behind codes ([f5479611](https://github.com/abapify/adt-cli/commit/f5479611))
+- **cli:** use unicode escapes in error sanitizer patterns ([61cf7b7e](https://github.com/abapify/adt-cli/commit/61cf7b7e))
+- **lint:** ignore private adt-fixtures in dependency-checks ([42ff67f9](https://github.com/abapify/adt-cli/commit/42ff67f9))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.7 (2026-09-18)
 
 ### 🩹 Fixes

@@ -1,3 +1,7 @@
+## 0.4.8 (2026-09-20)
+
+This was a version bump only for adt-atc to align it with other projects, there were no code changes.
+
 ## 0.5.0 (2026-09-20)
 
 ### 🚀 Features

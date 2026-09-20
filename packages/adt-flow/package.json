@@ -15,10 +15,10 @@
     "README.md"
   ],
   "dependencies": {
-    "@abapify/adk": "0.5.0",
-    "@abapify/adt-client": "0.5.0",
-    "@abapify/adt-config": "0.5.0",
-    "@abapify/adt-plugin": "0.5.0",
+    "@abapify/adk": "0.4.8",
+    "@abapify/adt-client": "0.4.8",
+    "@abapify/adt-config": "0.4.8",
+    "@abapify/adt-plugin": "0.4.8",
     "zod": "^4.4.3"
   },
   "publishConfig": {

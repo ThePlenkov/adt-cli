@@ -1,3 +1,21 @@
+## 0.4.8 (2026-09-20)
+
+### 🚀 Features
+
+- **adt:** add @abapify/adt standalone bundle package ([6f0e57fa](https://github.com/abapify/adt-cli/commit/6f0e57fa))
+
+### 🩹 Fixes
+
+- **cli:** use unicode escapes in error sanitizer patterns ([61cf7b7e](https://github.com/abapify/adt-cli/commit/61cf7b7e))
+- **cli:** sanitize typed plugin errors and gate messages behind codes ([f5479611](https://github.com/abapify/adt-cli/commit/f5479611))
+- **adt-cli:** report real package version; fix typecheck regressions ([0dd4b802](https://github.com/abapify/adt-cli/commit/0dd4b802))
+- **cli:** hide plugin error stacks ([583ee8ec](https://github.com/abapify/adt-cli/commit/583ee8ec))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- ThePlenkov @ThePlenkov
+
 ## 0.5.0 (2026-09-20)
 
 ### 🚀 Features

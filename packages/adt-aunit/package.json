@@ -29,10 +29,10 @@
     "gitlab-ci"
   ],
   "dependencies": {
-    "@abapify/adt-plugin": "0.5.0",
-    "@abapify/adt-schemas": "0.5.0",
-    "@abapify/adt-contracts": "0.5.0",
-    "@abapify/adt-plugin-abapgit": "0.5.0"
+    "@abapify/adt-plugin": "0.4.8",
+    "@abapify/adt-schemas": "0.4.8",
+    "@abapify/adt-contracts": "0.4.8",
+    "@abapify/adt-plugin-abapgit": "0.4.8"
   },
   "module": "./dist/index.mjs",
   "repository": {

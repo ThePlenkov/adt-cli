@@ -32,8 +32,8 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@abapify/adt-client": "0.5.0",
-    "@abapify/adt-fixtures": "0.5.0",
+    "@abapify/adt-client": "0.4.8",
+    "@abapify/adt-fixtures": "0.4.8",
     "@abapify/adt-mcp": "0.4.8",
     "mastra": "^0.10.0"
   },
