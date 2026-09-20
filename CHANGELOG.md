@@ -1,3 +1,20 @@
+## 0.4.9 (2026-09-20)
+
+### 🚀 Features
+
+- **adt-flow:** index omitted partial objects ([13d14600](https://github.com/abapify/adt-cli/commit/13d14600))
+
+### 🩹 Fixes
+
+- **adt:** declare bundled workspace deps so nx orders adt:build ([1fe54357](https://github.com/abapify/adt-cli/commit/1fe54357))
+- **adt-flow:** protect preserved omitted objects ([8e253d15](https://github.com/abapify/adt-cli/commit/8e253d15))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.8 (2026-09-20)
 
 ### 🚀 Features

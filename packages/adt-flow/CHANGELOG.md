@@ -1,3 +1,17 @@
+## 0.4.9 (2026-09-20)
+
+### 🚀 Features
+
+- **adt-flow:** index omitted partial objects ([13d14600](https://github.com/abapify/adt-cli/commit/13d14600))
+
+### 🩹 Fixes
+
+- **adt-flow:** protect preserved omitted objects ([8e253d15](https://github.com/abapify/adt-cli/commit/8e253d15))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.8 (2026-09-20)
 
 ### 🚀 Features

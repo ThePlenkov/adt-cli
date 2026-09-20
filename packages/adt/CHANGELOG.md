@@ -1,3 +1,14 @@
+## 0.4.9 (2026-09-20)
+
+### 🩹 Fixes
+
+- **adt:** declare bundled workspace deps so nx orders adt:build ([1fe54357](https://github.com/abapify/adt-cli/commit/1fe54357))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- ThePlenkov @ThePlenkov
+
 ## 0.4.8 (2026-09-20)
 
 ### 🚀 Features
