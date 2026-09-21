@@ -35,7 +35,7 @@
     "@abapify/adt-client": "0.4.9",
     "@abapify/adt-fixtures": "0.4.9",
     "@abapify/adt-mcp": "0.4.9",
-    "mastra": "^0.10.0"
+    "mastra": "^1.30.0"
   },
   "repository": {
     "type": "git",
