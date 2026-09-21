@@ -1,3 +1,13 @@
+## 0.4.10 (2026-09-21)
+
+### 🩹 Fixes
+
+- **deps:** upgrade chevrotain and mastra instead of overrides ([1bc31b61](https://github.com/abapify/adt-cli/commit/1bc31b61))
+
+### ❤️ Thank You
+
+- ThePlenkov @ThePlenkov
+
 ## 0.4.9 (2026-09-20)
 
 This was a version bump only for @abapify/aclass to align it with other projects, there were no code changes.

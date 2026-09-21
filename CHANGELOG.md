@@ -1,3 +1,15 @@
+## 0.4.10 (2026-09-21)
+
+### 🩹 Fixes
+
+- **deps:** override vulnerable rollup and lodash-es ([2e490771](https://github.com/abapify/adt-cli/commit/2e490771))
+- **deps:** keep security overrides semver-compatible ([a30df2df](https://github.com/abapify/adt-cli/commit/a30df2df))
+- **deps:** upgrade chevrotain and mastra instead of overrides ([1bc31b61](https://github.com/abapify/adt-cli/commit/1bc31b61))
+
+### ❤️ Thank You
+
+- ThePlenkov @ThePlenkov
+
 ## 0.4.9 (2026-09-20)
 
 ### 🚀 Features
