@@ -168,16 +168,18 @@ jobs:
         # caused by GITHUB_TOKEN pushes don't cascade to other workflows
         # (GitHub Actions by design). Invoke publish.yml via workflow_dispatch
         # so it runs with its own workflow_ref and our OIDC trusted
-        # publisher entries match. We pass the release commit SHA as the
+        # publisher entries match. We pass the release TAG as the
         # `version` input so publish.yml checks out exactly this commit —
         # a racing merge on main can't shift which tree gets published.
+        # (actions/checkout can't resolve a raw SHA in `ref`; the tag
+        # points at the release commit and is just as precise.)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ inputs.affected_only }}" = "false" ]; then
-            gh workflow run publish.yml --ref main -f affected_only=false -f "version=${{ steps.get_tags.outputs.sha }}"
+            gh workflow run publish.yml --ref main -f affected_only=false -f "version=${{ steps.get_tags.outputs.first_tag }}"
           else
-            gh workflow run publish.yml --ref main -f "version=${{ steps.get_tags.outputs.sha }}"
+            gh workflow run publish.yml --ref main -f "version=${{ steps.get_tags.outputs.first_tag }}"
           fi
 
   # Note: npm publishing is NOT wired up as `workflow_call` here. When
