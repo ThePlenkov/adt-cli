@@ -1,3 +1,13 @@
+## 0.4.11 (2026-09-23)
+
+### 🩹 Fixes
+
+- **adt-flow:** expose diverged ownership path ([d6f54833](https://github.com/abapify/adt-cli/commit/d6f54833))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.10 (2026-09-21)
 
 ### 🩹 Fixes
