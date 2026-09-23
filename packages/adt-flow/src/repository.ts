@@ -299,15 +299,24 @@ export function validateDesiredFiles(files: readonly DesiredFile[]): void {
   }
 }
 
+export async function findDivergedOwnedPath(
+  root: string,
+  files: readonly { path: string; hash: string }[],
+): Promise<string | undefined> {
+  for (const file of files) {
+    const content = await readText(root, file.path);
+    if (content === undefined || sha256(content) !== file.hash) {
+      return file.path;
+    }
+  }
+  return undefined;
+}
+
 export async function verifyOwnedHashes(
   root: string,
   files: readonly { path: string; hash: string }[],
 ): Promise<boolean> {
-  for (const file of files) {
-    const content = await readText(root, file.path);
-    if (content === undefined || sha256(content) !== file.hash) return false;
-  }
-  return true;
+  return (await findDivergedOwnedPath(root, files)) === undefined;
 }
 
 export async function planRepositoryChanges(

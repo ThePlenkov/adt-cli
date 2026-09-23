@@ -14,6 +14,7 @@ import {
 import { repositoryType } from './adt-client-adapter';
 import {
   applyRepositoryPlan,
+  findDivergedOwnedPath,
   planRepositoryChanges,
   readText,
   verifyOwnedHashes,
@@ -1204,11 +1205,12 @@ async function validateIndexedOwnership(
     identity,
     ctx.dependencies.format,
   );
-  if (!(await verifyOwnedHashes(ctx.root, descriptor.ownedFiles))) {
+  const path = await findDivergedOwnedPath(ctx.root, descriptor.ownedFiles);
+  if (path !== undefined) {
     throw new AdtFlowError(
       'working_tree_diverged',
       'An indexed file differs from its recorded content hash.',
-      { object: identity.canonical },
+      { object: identity.canonical, path },
     );
   }
 }

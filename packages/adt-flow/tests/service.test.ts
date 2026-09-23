@@ -669,7 +669,13 @@ describe('transport checkout', () => {
 
     await expect(
       flow.checkout({ root: workspace, transports: ['DEVK900001'], config }),
-    ).rejects.toMatchObject({ code: 'working_tree_diverged' });
+    ).rejects.toMatchObject({
+      code: 'working_tree_diverged',
+      details: {
+        object: expect.any(String),
+        path: 'src/feature/zcl_sample.clas.abap',
+      },
+    });
     expect(ports.readSource).not.toHaveBeenCalled();
     expect(
       await readFile(
