@@ -1,3 +1,13 @@
+## 0.4.13 (2026-09-28)
+
+### 🩹 Fixes
+
+- **cli:** render safe flow diagnostics ([a60e7153](https://github.com/abapify/adt-cli/commit/a60e7153))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.12 (2026-09-28)
 
 This was a version bump only for adt-cli to align it with other projects, there were no code changes.
