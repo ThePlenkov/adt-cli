@@ -1,3 +1,18 @@
+## 0.4.12 (2026-09-28)
+
+### 🚀 Features
+
+- **flow:** index manifest-inexact checkout ([7daba050](https://github.com/abapify/adt-cli/commit/7daba050))
+- **flow:** add source-free transport indexing ([2cf8bb46](https://github.com/abapify/adt-cli/commit/2cf8bb46))
+
+### 🩹 Fixes
+
+- **flow:** preserve index-only recovery invariants ([3d587744](https://github.com/abapify/adt-cli/commit/3d587744))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.11 (2026-09-23)
 
 ### 🩹 Fixes

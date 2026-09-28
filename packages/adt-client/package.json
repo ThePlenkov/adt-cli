@@ -1,6 +1,6 @@
 {
   "name": "@abapify/adt-client",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "description": "Minimalistic speci-based ADT client for SAP ABAP Development Tools",
   "license": "MIT",
   "publishConfig": {
@@ -17,9 +17,9 @@
     "README.md"
   ],
   "dependencies": {
-    "@abapify/logger": "0.4.11",
-    "@abapify/adt-contracts": "0.4.11",
-    "@abapify/adt-schemas": "0.4.11",
+    "@abapify/logger": "0.4.12",
+    "@abapify/adt-contracts": "0.4.12",
+    "@abapify/adt-schemas": "0.4.12",
     "undici": "^8.10.0"
   },
   "repository": {

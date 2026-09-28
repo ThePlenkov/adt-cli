@@ -1,3 +1,18 @@
+## 0.4.12 (2026-09-28)
+
+### 🚀 Features
+
+- **flow:** add source-free transport indexing ([2cf8bb46](https://github.com/abapify/adt-cli/commit/2cf8bb46))
+
+### 🩹 Fixes
+
+- **mcp:** redact raw flow failure causes ([060a3891](https://github.com/abapify/adt-cli/commit/060a3891))
+- **flow:** preserve index-only recovery invariants ([3d587744](https://github.com/abapify/adt-cli/commit/3d587744))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.11 (2026-09-23)
 
 This was a version bump only for adt-mcp to align it with other projects, there were no code changes.
