@@ -263,6 +263,11 @@ function checkoutTrCommand(
         description:
           'Write skipped-object JSON after a successful partial checkout',
       },
+      {
+        flags: '--index-on-inexact',
+        description:
+          'Persist source-free inventory when an exact source boundary is unavailable',
+      },
     ],
     async execute(args, ctx) {
       if (!ctx.getAdtClient) {
@@ -291,7 +296,7 @@ function checkoutTrCommand(
       // Commander normalizes --partial-report to partialReport at runtime;
       // retain the dashed spelling for direct plugin callers and tests.
       const report = partialReportPath(
-        args.partialReport ?? args['partial-report'],
+        args['partialReport'] ?? args['partial-report'],
         ctx.cwd,
         realRoot,
       );
@@ -306,6 +311,7 @@ function checkoutTrCommand(
         transports: transports(args['transport']),
         mode: args['base'] === true ? 'base' : 'head',
         partial: args['partial'] === true,
+        ...(args['indexOnInexact'] === true ? { indexOnInexact: true } : {}),
         config,
       });
       if (report) await writePartialReport(report, realRoot, result);
@@ -327,6 +333,56 @@ function checkoutTrCommand(
   };
 }
 
+function indexTrCommand(
+  dependencies: FlowCommandDependencies,
+): CliCommandPlugin {
+  return {
+    name: 'tr',
+    description: 'Index transport inventory without materializing source',
+    arguments: [
+      {
+        name: '<transport>',
+        description: 'Transport number or comma-separated transport scope',
+      },
+    ],
+    async execute(args, ctx) {
+      if (!ctx.getAdtClient) {
+        throw new AdtFlowError(
+          'sap_operation_failed',
+          'An authenticated ADT client is required.',
+        );
+      }
+      const config = flowConfig(ctx);
+      const format = dependencies.getFormat(config.format.id);
+      if (!format) {
+        throw new AdtFlowError(
+          'format_unsupported',
+          `Format plugin "${config.format.id}" is not registered.`,
+        );
+      }
+      const client = (await ctx.getAdtClient()) as AdtClient;
+      const result = await dependencies.createService(client, format).index({
+        root: ctx.cwd,
+        transports: transports(args['transport']),
+        config,
+      });
+      ctx.logger.info(
+        `Indexed ${result.requestedTransports.join(', ')}: ` +
+          `${result.descriptors.length} descriptors, ${result.skipped.length} omissions.`,
+      );
+      for (const skipped of result.skipped) {
+        ctx.logger.warn(
+          `Indexed omission ${skipped.object} (${skipped.component}; ${skipped.diagnostic}).`,
+        );
+      }
+      ctx.logger.info(
+        `SAP calls: manifest=${result.sapCalls.manifest}, metadata=${result.sapCalls.metadata}, ` +
+          `source=${result.sapCalls.source}.`,
+      );
+    },
+  };
+}
+
 export function createFlowCommand(
   overrides: Partial<FlowCommandDependencies> = {},
 ): CliCommandPlugin {
@@ -339,6 +395,12 @@ export function createFlowCommand(
         name: 'checkout',
         description: 'Reconcile a source tree to an ADT boundary',
         subcommands: [checkoutTrCommand(dependencies)],
+      },
+      {
+        name: 'index',
+        description:
+          'Persist transport inventory without source materialization',
+        subcommands: [indexTrCommand(dependencies)],
       },
     ],
   };

@@ -65,6 +65,18 @@ export interface FlowCheckoutInput {
    * explicit caller opt-in; ordinary checkout remains fail-closed.
    */
   partial?: boolean;
+  /**
+   * Persist only source-free transport inventory when manifest exactness is
+   * unavailable. Other checkout failures remain fail-closed.
+   */
+  indexOnInexact?: boolean;
+  config: FlowConfig;
+}
+
+/** Persist transport inventory and unresolved-boundary descriptors only. */
+export interface FlowIndexInput {
+  root: string;
+  transports: string[];
   config: FlowConfig;
 }
 
