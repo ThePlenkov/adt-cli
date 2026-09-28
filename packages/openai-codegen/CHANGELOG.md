@@ -1,3 +1,14 @@
+## 0.4.14 (2026-09-28)
+
+### 🩹 Fixes
+
+- **tests:** restore vitest runner and fix latent build/test gaps ([5b77e658](https://github.com/abapify/adt-cli/commit/5b77e658))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- ThePlenkov @ThePlenkov
+
 ## 0.4.13 (2026-09-28)
 
 This was a version bump only for @abapify/openai-codegen to align it with other projects, there were no code changes.

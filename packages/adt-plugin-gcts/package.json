@@ -1,6 +1,6 @@
 {
   "name": "@abapify/adt-plugin-gcts",
-  "version": "0.4.13",
+  "version": "0.4.14",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
@@ -18,8 +18,8 @@
     "dist"
   ],
   "dependencies": {
-    "@abapify/adk": "0.4.13",
-    "@abapify/adt-plugin": "0.4.13"
+    "@abapify/adk": "0.4.14",
+    "@abapify/adt-plugin": "0.4.14"
   },
   "devDependencies": {
     "json-schema-to-typescript": "15.0.4"
