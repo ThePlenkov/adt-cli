@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { it } from 'node:test';
+import { it } from 'vitest';
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { openApiDocument } from '../src/openapi.js';
 

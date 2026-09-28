@@ -29,23 +29,12 @@
   },
   "plugins": [
     {
-      "plugin": "@nx/js/typescript",
+      "plugin": "@nx-devkit/typescript",
       "options": {
-        "typecheck": {
-          "targetName": "typecheck"
-        },
-        "build": {
-          "targetName": "build",
-          "configName": "tsconfig.lib.json"
-        }
-      },
-      "exclude": ["packages/xmld/*"]
-    },
-    {
-      "plugin": "./tools/nx-tsdown/src/index.ts"
-    },
-    {
-      "plugin": "./tools/nx-vitest/src/index.ts"
+        "eslint": false,
+        "oxlint": false,
+        "biome": false
+      }
     },
     {
       "plugin": "./tools/nx-npm-trust/src/index.ts",
@@ -61,15 +50,6 @@
       "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"
-      }
-    },
-    {
-      "plugin": "@nx/js/typescript",
-      "include": ["packages/xmld/*"],
-      "options": {
-        "typecheck": {
-          "targetName": "typecheck"
-        }
       }
     },
     {

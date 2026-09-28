@@ -167,6 +167,7 @@ export const MCP_TOOL_SCOPE_CATALOGUE: Readonly<Record<string, McpToolScope>> =
       'cts_get_transport',
       'cts_list_transports',
       'cts_search_transports',
+      'cts_transport_metadata',
       'cts_transport_objects',
       'cts_transport_source_manifest',
     ]),
