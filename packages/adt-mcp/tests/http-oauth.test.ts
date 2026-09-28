@@ -13,7 +13,7 @@
  * the `onOAuthUserHint` internal hook to verify the claim-extraction
  * logic end-to-end.
  */
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { tlsFetch, startTestServer } from './_tls-fixtures.js';
 
 import assert from 'node:assert';
@@ -154,7 +154,7 @@ describe('adt-mcp HTTP auth — mode=oauth (JWKS explicit)', () => {
   let server: RunningHttpServer;
   const capturedHints: (UserHint | undefined)[] = [];
 
-  before(async () => {
+  beforeAll(async () => {
     __resetOAuthDiscoveryCacheForTests();
     idp = await startMockIdp();
     server = await startTestServer({
@@ -170,7 +170,7 @@ describe('adt-mcp HTTP auth — mode=oauth (JWKS explicit)', () => {
       registry: emptyRegistry(),
     });
   });
-  after(async () => {
+  afterAll(async () => {
     await server.close();
     await idp.close();
   });
@@ -274,7 +274,7 @@ describe('adt-mcp HTTP auth — mode=oauth (OIDC discovery fallback)', () => {
   let idp: MockIdp;
   let server: RunningHttpServer;
 
-  before(async () => {
+  beforeAll(async () => {
     __resetOAuthDiscoveryCacheForTests();
     idp = await startMockIdp();
     // No jwksUri → force discovery.
@@ -287,7 +287,7 @@ describe('adt-mcp HTTP auth — mode=oauth (OIDC discovery fallback)', () => {
       registry: emptyRegistry(),
     });
   });
-  after(async () => {
+  afterAll(async () => {
     await server.close();
     await idp.close();
   });

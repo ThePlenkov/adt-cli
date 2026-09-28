@@ -4,7 +4,7 @@
  * and scope, and that a session cannot be continued with another JTI.
  */
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import {
   tlsFetch,
   createTlsTransport,

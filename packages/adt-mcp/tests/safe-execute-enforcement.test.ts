@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it } from 'vitest';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { destinationModeServer } from '../src/lib/tools/destination-mode.js';
 import { registerAtcRunTool } from '../src/lib/tools/atc-run.js';

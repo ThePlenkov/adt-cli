@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import test from 'node:test';
+import { test } from 'vitest';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { AdtClient } from '@abapify/adt-client';
 import type { FormatPlugin } from '@abapify/adt-plugin';

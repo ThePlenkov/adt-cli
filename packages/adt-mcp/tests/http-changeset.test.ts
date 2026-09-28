@@ -11,7 +11,7 @@
  *   - rollback path releases the lock on the mock server
  */
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { createTlsTransport, startTestServer } from './_tls-fixtures.js';
 
 import assert from 'node:assert';
@@ -53,7 +53,7 @@ function parseToolText(result: unknown): { json: unknown; isError: boolean } {
 }
 
 describe('adt-mcp HTTP — Wave 3 changesets', () => {
-  before(async () => {
+  beforeAll(async () => {
     mockAdt = createMockAdtServer();
     const info = await mockAdt.start();
     mockPort = info.port;
@@ -65,7 +65,7 @@ describe('adt-mcp HTTP — Wave 3 changesets', () => {
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     await http?.close();
     await mockAdt?.stop();
   });

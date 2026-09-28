@@ -3,7 +3,7 @@
  * real ES256 JWS values — the verifier never trusts decoded, unsigned data.
  */
 import assert from 'node:assert/strict';
-import { before, describe, it } from 'node:test';
+import { beforeAll, describe, it } from 'vitest';
 import {
   generateKeyPair,
   SignJWT,
@@ -25,7 +25,7 @@ let privateKey: CryptoKey;
 let publicKey: CryptoKey;
 let verifier: ReturnType<typeof createMcpInvocationVerifier>;
 
-before(async () => {
+beforeAll(async () => {
   ({ privateKey, publicKey } = await generateKeyPair('ES256'));
   verifier = createMcpInvocationVerifier({
     publicKey,
@@ -106,8 +106,11 @@ describe('MCP invocation verifier', () => {
       classes: ['server', 'read'],
       destinationKeys: ['trl-rise'],
       correlationId: 'correlation-001',
-      constraint: { systemSid: 'TRL', frozenScope: ['ZCL_ADT_REVIEW'] },
-      limits: { maxSourceBytes: 65_536 },
+      constraint: Object.assign(Object.create(null), {
+        systemSid: 'TRL',
+        frozenScope: ['ZCL_ADT_REVIEW'],
+      }),
+      limits: Object.assign(Object.create(null), { maxSourceBytes: 65_536 }),
     });
     assert.ok(verified);
     assert.ok(Object.isFrozen(verified));
