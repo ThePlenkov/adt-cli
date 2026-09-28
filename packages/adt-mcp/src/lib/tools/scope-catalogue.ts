@@ -374,7 +374,11 @@ function isScopedReadResourceAllowed(
   name: string,
   arguments_: Record<string, unknown>,
 ): boolean {
-  if (name !== 'get_object' && name !== 'get_object_structure') return true;
+  // Fail closed: a scoped read must not reach tools that take unbounded
+  // resource identifiers (e.g. `cts_*` transport reads). The toolNames
+  // contract whitelist already blocks them at parse time; this keeps the
+  // dispatch layer equally strict if that whitelist ever widens.
+  if (name !== 'get_object' && name !== 'get_object_structure') return false;
   if (scoped.resourceKeys.length === 0) return false;
   const key = canonicalObjectKey(arguments_.objectType, arguments_.objectName);
   return Boolean(key && scoped.resourceKeys.includes(key));
