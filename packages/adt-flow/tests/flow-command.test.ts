@@ -182,9 +182,11 @@ describe('flow CLI command', () => {
       ctx,
     );
 
-    expect(checkout).toHaveBeenCalledWith(expect.objectContaining({
-      indexOnInexact: true,
-    }));
+    expect(checkout).toHaveBeenCalledWith(
+      expect.objectContaining({
+        indexOnInexact: true,
+      }),
+    );
   });
 
   it('rejects a missing flow config before requesting an ADT client', async () => {
