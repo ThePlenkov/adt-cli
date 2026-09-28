@@ -41,6 +41,11 @@ separate explicit opt-in that materializes only exact objects. `index` never
 materializes source; it retains the complete transport inventory and records
 every unresolved component as an `omitted` descriptor for a later retry.
 
+Automation that must preserve an inexact transport for a later retry can opt
+into `adt flow checkout tr <transport> --index-on-inexact`. Only the typed
+`manifest_inexact` outcome falls back to source-free indexing; every other
+checkout error remains fail-closed.
+
 ```typescript
 import {
   createAdtFlowService,

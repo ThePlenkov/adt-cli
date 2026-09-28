@@ -263,6 +263,11 @@ function checkoutTrCommand(
         description:
           'Write skipped-object JSON after a successful partial checkout',
       },
+      {
+        flags: '--index-on-inexact',
+        description:
+          'Persist source-free inventory when an exact source boundary is unavailable',
+      },
     ],
     async execute(args, ctx) {
       if (!ctx.getAdtClient) {
@@ -306,6 +311,7 @@ function checkoutTrCommand(
         transports: transports(args['transport']),
         mode: args['base'] === true ? 'base' : 'head',
         partial: args['partial'] === true,
+        ...(args['indexOnInexact'] === true ? { indexOnInexact: true } : {}),
         config,
       });
       if (report) await writePartialReport(report, realRoot, result);

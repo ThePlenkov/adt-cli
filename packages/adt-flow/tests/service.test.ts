@@ -769,6 +769,51 @@ describe('transport checkout', () => {
     ).resolves.toContain('SOURCE_HISTORY_SCOPE_VERSION_MISSING');
   });
 
+  it('indexes only a manifest-inexact checkout when the caller explicitly opts in', async () => {
+    const workspace = await root();
+    const current = manifest('modified', version('before'), version('after'));
+    current.entries.push({
+      object: {
+        pgmid: 'R3TR',
+        type: 'CLAS',
+        name: 'ZCL_ZZZ_INEXACT',
+        packageName: 'ZROOT_FEATURE',
+      },
+      component: { id: 'main' },
+      sourceTransport: 'DEVK900001',
+      changeKind: 'ambiguous',
+      exact: false,
+      diagnostic: {
+        code: 'SOURCE_HISTORY_SCOPE_VERSION_MISSING',
+        message: 'No exact version belongs to the scope.',
+      },
+    });
+    const ports = dependencies(() => current);
+
+    await expect(
+      createAdtFlowService(ports).checkout({
+        root: workspace,
+        transports: ['DEVK900001'],
+        config,
+        indexOnInexact: true,
+      }),
+    ).resolves.toMatchObject({
+      changed: [],
+      descriptors: expect.arrayContaining(['.adt/tr/DEVK900001.json']),
+      skipped: [
+        {
+          object: 'CLAS/ZCL_ZZZ_INEXACT',
+          component: 'main',
+          diagnostic: 'SOURCE_HISTORY_SCOPE_VERSION_MISSING',
+          sourceTransport: 'DEVK900001',
+        },
+      ],
+      sapCalls: { source: 0 },
+    });
+    expect(ports.readSource).not.toHaveBeenCalled();
+    expect(ports.loadObject).not.toHaveBeenCalled();
+  });
+
   it('indexes inventory without requiring a materializing format plugin', async () => {
     const workspace = await root();
     const ports = dependencies(() =>

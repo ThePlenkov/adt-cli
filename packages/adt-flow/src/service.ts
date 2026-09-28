@@ -1577,7 +1577,19 @@ async function checkoutFlow(
   const fast = await tryExactHeadFastPath(ctx);
   if (fast) return fast;
 
-  const manifestContext = await buildManifestAndGroups(ctx);
+  let manifestContext: ManifestContext;
+  try {
+    manifestContext = await buildManifestAndGroups(ctx);
+  } catch (error) {
+    if (
+      input.indexOnInexact === true &&
+      error instanceof AdtFlowError &&
+      error.code === 'manifest_inexact'
+    ) {
+      return indexFlow(input, dependencies);
+    }
+    throw error;
+  }
   const pendingOwnership = await buildPendingOwnership(
     ctx,
     manifestContext.groups,

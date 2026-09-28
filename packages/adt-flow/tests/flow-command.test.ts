@@ -169,6 +169,24 @@ describe('flow CLI command', () => {
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
+  it('forwards the explicit index-on-inexact opt-in to checkout', async () => {
+    const checkout = makeCheckout();
+    const command = createFlowCommand({
+      getFormat: vi.fn(() => format),
+      createService: vi.fn(() => ({ checkout, index: makeIndex() })),
+    });
+    const ctx = makeContext('/workspace');
+
+    await leaf(command).execute?.(
+      { transport: 'DEVK900001', indexOnInexact: true },
+      ctx,
+    );
+
+    expect(checkout).toHaveBeenCalledWith(expect.objectContaining({
+      indexOnInexact: true,
+    }));
+  });
+
   it('rejects a missing flow config before requesting an ADT client', async () => {
     const getAdtClient = vi.fn(async () => ({}) as AdtClient);
     const command = createFlowCommand();
