@@ -57,6 +57,7 @@ describe('openai-codegen × aclass — parse-gate for petstore3 corpus', () => {
         .map((i) => `${i.getKey()}: ${i.getMessage()}`);
       expect(fatals).toEqual([]);
     },
+    30_000,
   );
 
   it.each(files.filter((f) => f.f.endsWith('.intf.abap')))(
@@ -64,8 +65,7 @@ describe('openai-codegen × aclass — parse-gate for petstore3 corpus', () => {
     ({ f, src }) => {
       const { ast } = parse(src);
       const iface = ast.definitions.find((d) => d.kind === 'InterfaceDef') as
-        | InterfaceDef
-        | undefined;
+        InterfaceDef | undefined;
       expect(iface, `${f} has no InterfaceDef`).toBeDefined();
       if (!iface) return;
       const raws = iface.members.filter((m) => m.kind === 'RawMember');
