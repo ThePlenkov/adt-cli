@@ -55,7 +55,7 @@ The system SHALL accept an optional path to a custom `abaplint.jsonc` configurat
 
 ### Requirement: Pre-write lint gate in update_source
 
-The system SHALL provide an opt-in lint gate for `update_source` / `adt source write`. When enabled (`lintBeforeWrite: true` / `--lint-before-write`), parser errors or cloud-type violations SHALL block the write and report the blocking diagnostics without modifying SAP.
+The system SHALL provide an opt-in lint gate for `update_source` / `adt source write`. When enabled (`lintBeforeWrite: true` / `--lint-before-write`), diagnostics with keys `parser_error`, `cloud_types`, or `strict_sql` SHALL block the write and report the blocking diagnostics without modifying SAP (`strict_sql` violations block only when the BTP preset enables the rule).
 
 #### Scenario: Gate blocks write on parser error
 

@@ -69,7 +69,12 @@ The system SHALL accept `maxDeps` (default 20) and `depth` (1 = direct only, max
 
 The system SHALL expose `adt context <objectName> [--type <CLAS|INTF|PROG|DDLS|FUNC>] [--depth <n>] [--max-deps <n>] [--json]` that prints the compressed context to stdout.
 
-#### Scenario: CLI context outputs compressed JSON
+#### Scenario: CLI context outputs compressed JSON with --json
 
-- **WHEN** the user runs `adt context ZCL_ORDER --type CLAS`
+- **WHEN** the user runs `adt context ZCL_ORDER --type CLAS --json`
 - **THEN** the compressed dependency contracts are printed as JSON to stdout
+
+#### Scenario: CLI context lists dependency names by default
+
+- **WHEN** the user runs `adt context ZCL_ORDER --type CLAS` without `--json`
+- **THEN** the detected dependency names are printed to stdout
