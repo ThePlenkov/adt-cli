@@ -10,5 +10,8 @@
 
 ## 3. Verification
 
-- [ ] 3.1 Run focused package tests, typecheck, and strict OpenSpec validation.
+- [x] 3.1 Run focused package tests, typecheck, and strict OpenSpec validation.
+      adt-mcp test suite (208 tests incl. revived security files) green on main;
+      `openspec validate --strict` passes.
 - [ ] 3.2 Prove the command against a disposable SAP transport before consumer promotion.
+      Deferred: requires a live SAP system; tracked outside this change.

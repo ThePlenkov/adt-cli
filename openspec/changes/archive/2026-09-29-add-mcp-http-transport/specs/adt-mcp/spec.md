@@ -1,10 +1,10 @@
 # Delta — `adt-mcp` capability
 
-## MODIFIED Requirements
+## ADDED Requirements
 
-### Requirement: Stateless server — connection-per-call
+### Requirement: Two transports with distinct state models
 
-> Previous wording (invariant #4 in `packages/adt-mcp/AGENTS.md`):
+> Supersedes invariant #4 in `packages/adt-mcp/AGENTS.md`:
 > "Each tool call creates its own AdtClient via ctx.getClient(args). The
 > server holds no session, no cached client, and no credentials between
 > calls."
