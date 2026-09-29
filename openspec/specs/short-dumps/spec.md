@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change arc-1-feature-parity. Update Purpose after archive.
+Retrieval of ABAP runtime short dumps via `get_short_dumps` / `adt diagnose dumps`.
 
 ## Requirements
 

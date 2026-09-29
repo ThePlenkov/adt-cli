@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-delegated-assistant-read-scope. Update Purpose after archive.
+MCP server bridging AI assistants to SAP ADT — tool registration, delegated/ambient authorization, scoped dispatch policies, Streamable HTTP transport, sessions, and changesets.
 
 ## Requirements
 
@@ -134,6 +134,30 @@ and `DELETE /mcp` and SHALL assign session IDs via `randomUUID`.
 - **THEN** the server responds with HTTP 404 or 405, and documentation
   directs the client to Streamable HTTP.
 
+### Requirement: Two transports, two client state models
+
+Both transports SHALL share every tool handler, but SHALL differ in
+`AdtClient` state: over **stdio** the server creates a fresh `AdtClient`
+per tool call from the call arguments and no state persists across
+calls; over **Streamable HTTP** each MCP session (`Mcp-Session-Id`)
+owns a cached `AdtClient`, a lock registry, and an optional active
+changeset, established via `sap_connect`. Stateful tools such as
+`changeset_*` therefore require an HTTP session.
+
+#### Scenario: stdio calls are stateless
+
+- **GIVEN** the server runs on the stdio transport
+- **WHEN** two consecutive tool calls arrive
+- **THEN** each constructs its own `AdtClient` from its arguments and no
+  client state carries over between the calls.
+
+#### Scenario: HTTP session reuses the connected client
+
+- **GIVEN** an HTTP session that called `sap_connect`
+- **WHEN** subsequent tool calls arrive on the same `Mcp-Session-Id`
+- **THEN** they reuse the session's cached `AdtClient` and lock
+  registry.
+
 ### Requirement: Session lifecycle cleanup
 
 When an HTTP MCP session ends (explicit `DELETE /mcp`, `sap_disconnect`,
@@ -183,6 +207,11 @@ check SHALL be skipped and the server SHALL instead require a non-empty
   `x-forwarded-user: alice`
 - **THEN** the request is accepted and the user identity is available to
   tool handlers for logging.
+
+> Deployment note: proxy mode trusts whatever client sets
+> `x-forwarded-user`; the listener currently only warns on non-loopback
+> binds. Enforcing the trusted-proxy boundary (loopback-only or
+> allowlist enforcement) is tracked as follow-up work.
 
 ### Requirement: Host header and CORS protection
 
@@ -268,24 +297,37 @@ open per MCP session.
   objects, releases every lock, and the session's changeset state
   returns to idle.
 
-#### Scenario: Rollback discards operations and releases locks
+#### Scenario: Rollback releases locks without reverting applied source
 
-- **GIVEN** an open changeset with one update queued and one lock held
+- **GIVEN** an open changeset whose `changeset_add` calls already PUT
+  source to SAP under lock
 - **WHEN** the client calls `changeset_rollback`
-- **THEN** no activation occurs, the lock is released, and the session's
-  changeset state returns to idle.
+- **THEN** no activation occurs, every lock is released, and the session's
+  changeset state returns to idle. The already-written source PUTs are
+  NOT reverted — SAP has no transactional discard over ADT; the inactive
+  version stays on the system until the next edit/activate cycle
+  (matching Eclipse ADT editor-close behaviour).
 
-#### Scenario: Nested begin is rejected
+#### Scenario: Nested begin without force is rejected
 
 - **GIVEN** a session with an already open changeset
-- **WHEN** the client calls `changeset_begin` again
+- **WHEN** the client calls `changeset_begin` again without `force`
 - **THEN** the tool returns an error without modifying the existing
   changeset.
+
+#### Scenario: Forced begin rolls back and restarts
+
+- **GIVEN** a session with an already open changeset
+- **WHEN** the client calls `changeset_begin` with `force: true`
+- **THEN** the server rolls back the existing changeset (releasing its
+  locks, without reverting applied source) and opens a new changeset.
 
 ### Requirement: CLI ↔ MCP parity for changesets
 
 Every changeset operation SHALL be available as both an
-`adt changeset …` CLI subcommand and an `sap_*_changeset` MCP tool, and
+`adt changeset …` CLI subcommand and a `changeset_*` MCP tool
+(`changeset_begin`, `changeset_add`, `changeset_commit`,
+`changeset_rollback`), and
 both SHALL exercise the same `ChangesetService`. A parity test at
 `packages/adt-cli/tests/e2e/parity.changeset.test.ts` SHALL drive the
 CLI and MCP paths through the same mock server and assert equivalent

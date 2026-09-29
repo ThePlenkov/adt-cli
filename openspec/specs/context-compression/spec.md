@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change arc-1-feature-parity. Update Purpose after archive.
+Compressed dependency context for ABAP objects — `get_context` / `adt context` strip dependencies to their public API surface for token-efficient prompting.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ Public API surface definition:
 - **CLAS**: `CLASS DEFINITION … PUBLIC SECTION …  ENDCLASS.` — `PROTECTED`, `PRIVATE` sections and `CLASS IMPLEMENTATION` block are removed.
 - **INTF**: Full interface source (interfaces are inherently public).
 - **FUNC**: Function module signature only (`IMPORTING`, `EXPORTING`, `CHANGING`, `EXCEPTIONS` lines; function body removed).
-- **DDLS (CDS view)**: Full DDL source of the view and all referenced data sources / associations (dependency graph).
+- **DDLS (CDS view)**: Full DDL source of the view. Resolving referenced data sources and associations into a CDS dependency graph is not implemented (ABAP-only dependency patterns are used) and is tracked as follow-up work.
 
 #### Scenario: Get context for a class returns stripped dependencies
 
@@ -67,7 +67,7 @@ The system SHALL accept `maxDeps` (default 20) and `depth` (1 = direct only, max
 
 ### Requirement: CLI context command
 
-The system SHALL expose `adt context <objectName> [--type <CLAS|INTF|PROG|DDLS>] [--depth <n>] [--max-deps <n>] [--json]` that prints the compressed context to stdout.
+The system SHALL expose `adt context <objectName> [--type <CLAS|INTF|PROG|DDLS|FUNC>] [--depth <n>] [--max-deps <n>] [--json]` that prints the compressed context to stdout.
 
 #### Scenario: CLI context outputs compressed JSON
 

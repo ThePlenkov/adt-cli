@@ -2,13 +2,13 @@
 
 ## Purpose
 
-TBD - created by archiving change arc-1-feature-parity. Update Purpose after archive.
+Targeted method-body replacement in ABAP classes via `update_source action:"editMethod"` / `adt source write --method` without requiring the caller to supply the full class source.
 
 ## Requirements
 
-### Requirement: Edit a single method without sending the full class source
+### Requirement: Edit a single method without supplying the full class source
 
-The system SHALL extend `update_source` with an `action: "editMethod"` variant and extend `adt source write` with `--method <methodName>` that replaces only the body of the named method in an existing ABAP class, minimising the source payload sent to SAP.
+The system SHALL extend `update_source` with an `action: "editMethod"` variant and extend `adt source write` with `--method <methodName>` that replaces only the body of the named method in an existing ABAP class, so the caller supplies only the method body — not the full class source. The implementation fetches the current full source, splices the method, and writes the reconstructed full source back to SAP via the standard source/main PUT (a partial-payload write is tracked as follow-up work).
 
 #### Scenario: Method body is replaced correctly
 
@@ -36,7 +36,7 @@ The system SHALL locate the method boundary using a case-insensitive line scan f
 
 #### Scenario: Simple scan finds method boundaries
 
-- **WHEN** the class source contains `  METHOD process.` followed later by `  ENDMETHOD.`
+- **WHEN** the class source contains `METHOD process.` followed later by `ENDMETHOD.` (optionally indented)
 - **THEN** the system correctly identifies the start and end lines for splicing
 
 #### Scenario: Ambiguous scan returns null

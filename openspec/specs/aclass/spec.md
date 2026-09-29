@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-aclass-parser. Update Purpose after archive.
+ABAP OO source parser producing a typed AST for `.clas.abap` / `.intf.abap` files — structural declarations only, with method bodies preserved as opaque source slices.
 
 ## Requirements
 

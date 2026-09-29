@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change arc-1-feature-parity. Update Purpose after archive.
+Retrieval and management of SAT/ABAP runtime traces via `get_traces` / `adt diagnose traces`.
 
 ## Requirements
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-cts-transport-metadata-json. Update Purpose after archive.
+Typed CTS transport metadata for automation — request/task hierarchy, status, owner, and timestamps via `adt cts tr metadata --json` and the `cts_transport_metadata` MCP tool.
 
 ## Requirements
 
@@ -20,8 +20,10 @@ description, and SAP last-change timestamp when SAP provides it.
 
 ### Requirement: CLI JSON stdout is machine-readable
 
-The `adt cts tr metadata <transport> --json` command SHALL write exactly one
-JSON document to stdout and SHALL write diagnostics only to stderr.
+On success, the `adt cts tr metadata <transport> --json` command SHALL write
+exactly one JSON document to stdout and SHALL write diagnostics only to
+stderr. On failure, the command writes diagnostics to stderr, exits non-zero,
+and stdout is left empty.
 
 #### Scenario: Successful JSON invocation
 
