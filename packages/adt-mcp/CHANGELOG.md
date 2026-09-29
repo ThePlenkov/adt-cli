@@ -1,3 +1,14 @@
+## 0.4.15 (2026-09-29)
+
+### 🩹 Fixes
+
+- **adt-mcp:** fail closed on unbounded scoped-read dispatch ([#222](https://github.com/abapify/adt-cli/pull/222))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- ThePlenkov @ThePlenkov
+
 ## 0.4.14 (2026-09-28)
 
 ### 🩹 Fixes
