@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { toMcpTransportSourceManifest } from '../src/lib/tools/cts-transport-source-manifest.js';
 import { createSourceCapabilityRegistry } from '../src/lib/source-capabilities.js';
 

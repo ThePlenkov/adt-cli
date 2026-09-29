@@ -2,7 +2,7 @@
  * Verifies that the HTTP MCP transport can be composed under a listener that
  * is owned by the embedding application.
  */
-import { after, describe, it } from 'node:test';
+import { afterAll, describe, it } from 'vitest';
 import assert from 'node:assert';
 import http from 'node:http';
 import { createHttpMcpHandler } from '../src/lib/http/server.js';
@@ -11,7 +11,7 @@ import { createSessionRegistry } from '../src/lib/session/registry.js';
 describe('createHttpMcpHandler', () => {
   const listeners: http.Server[] = [];
 
-  after(async () => {
+  afterAll(async () => {
     await Promise.all(
       listeners.map(async (listener) => {
         if (!listener.listening) return;

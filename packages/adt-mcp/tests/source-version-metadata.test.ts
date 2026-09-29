@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { toMcpSourceVersionListing } from '../src/lib/tools/list-source-versions.js';
 
 test('source-version metadata never exposes a component or immutable source URI', () => {

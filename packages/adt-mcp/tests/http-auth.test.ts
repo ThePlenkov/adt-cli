@@ -16,7 +16,7 @@
  * an allowed (authenticated) call, and 401 for an unauthenticated one.
  * That's enough to distinguish "auth passed" from "auth blocked".
  */
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { tlsFetch, startTestServer } from './_tls-fixtures.js';
 
 import assert from 'node:assert';
@@ -82,12 +82,12 @@ async function probeMcp(
 
 describe('adt-mcp HTTP auth — mode=none (default)', () => {
   let server: RunningHttpServer;
-  before(async () => {
+  beforeAll(async () => {
     server = await startTestServer({
       registry: emptyRegistry(),
     });
   });
-  after(async () => {
+  afterAll(async () => {
     await server.close();
   });
 
@@ -109,14 +109,14 @@ describe('adt-mcp HTTP auth — mode=none (default)', () => {
 describe('adt-mcp HTTP auth — mode=bearer', () => {
   let server: RunningHttpServer;
   const token = 'super-secret-test-token-abc123';
-  before(async () => {
+  beforeAll(async () => {
     server = await startTestServer({
       authMode: 'bearer',
       authToken: token,
       registry: emptyRegistry(),
     });
   });
-  after(async () => {
+  afterAll(async () => {
     await server.close();
   });
 
@@ -169,13 +169,13 @@ describe('adt-mcp HTTP auth — mode=bearer', () => {
 
 describe('adt-mcp HTTP auth — mode=proxy (trustForwardedAuth)', () => {
   let server: RunningHttpServer;
-  before(async () => {
+  beforeAll(async () => {
     server = await startTestServer({
       trustForwardedAuth: true,
       registry: emptyRegistry(),
     });
   });
-  after(async () => {
+  afterAll(async () => {
     await server.close();
   });
 
@@ -196,13 +196,13 @@ describe('adt-mcp HTTP auth — mode=proxy (trustForwardedAuth)', () => {
 
 describe('adt-mcp HTTP — CORS', () => {
   let server: RunningHttpServer;
-  before(async () => {
+  beforeAll(async () => {
     server = await startTestServer({
       allowedOrigins: ['https://app.example.com'],
       registry: emptyRegistry(),
     });
   });
-  after(async () => {
+  afterAll(async () => {
     await server.close();
   });
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -80,7 +80,7 @@ test('a read-scoped caller can dispatch a permitted read tool', async () => {
   assert.strictEqual(calls, 1);
 });
 
-test('ATC analysis is permitted by ordinary read authority', async () => {
+test('ATC analysis is denied to ordinary read authority', async () => {
   const target = new CapturingServer();
   let calls = 0;
   const readServer = destinationModeServer(target as unknown as McpServer, {
@@ -91,16 +91,15 @@ test('ATC analysis is permitted by ordinary read authority', async () => {
     return { content: [{ type: 'text' as const, text: 'permitted' }] };
   });
 
-  const permitted = await target.handlers.get('atc_run')!(
+  const denied = await target.handlers.get('atc_run')!(
     { destination: 'dev' },
     { sessionId: 'session-1' },
   );
-  assert.notStrictEqual(permitted.isError, true);
-  assert.strictEqual(permitted.content[0]?.text, 'permitted');
-  assert.strictEqual(calls, 1);
+  assert.strictEqual(denied.isError, true);
+  assert.strictEqual(calls, 0);
   assert.strictEqual(
     MCP_TOOL_SCOPE_CATALOGUE.run_unit_tests?.operationClass,
-    'read',
+    'safe_execute',
   );
 });
 
@@ -184,6 +183,60 @@ test('a caller with malformed trusted classes is denied without throwing', async
   assert.strictEqual(result.isError, true);
   assert.strictEqual(result.content[0]?.text, 'mcp_scope_denied');
   assert.strictEqual(handlerCalls, 0);
+});
+
+test('a read-scoped caller cannot dispatch unbounded read tools even if toolNames names them', async () => {
+  // The adt-execution contract whitelist only admits get_object /
+  // get_object_structure. This simulates a widened whitelist naming a CTS
+  // transport read: dispatch must still fail closed at the resource layer
+  // because a transport number is not a bindable canonical object key.
+  const target = new CapturingServer();
+  const access: McpRequestAccess = {
+    classes: ['server', 'read'],
+    destinationKeys: ['dev'],
+    scoped: {
+      tokenId: 'read-jti',
+      principal: 'engineer@example.invalid',
+      correlationId: 'scoped:execution:read',
+      scopeId: '11111111-1111-4111-8111-111111111111',
+      executionId: '22222222-2222-4222-8222-222222222222',
+      systemSid: 'TST',
+      resourceKeys: ['CLAS:ZCL_RELEASE_GATE'],
+      toolNames: ['get_object', 'cts_get_transport'],
+      operationClass: 'read',
+      maxToolCalls: 5,
+    },
+  };
+  const server = destinationModeServer(target as unknown as McpServer, {
+    requestAccess: () => access,
+  });
+  let handlerCalls = 0;
+  server.tool('cts_get_transport', {}, async () => {
+    handlerCalls++;
+    return { content: [{ type: 'text' as const, text: 'unexpected' }] };
+  });
+  server.tool('get_object', {}, async () => ({
+    content: [{ type: 'text' as const, text: 'permitted' }],
+  }));
+
+  const denied = await target.handlers.get('cts_get_transport')!(
+    { destination: 'dev', transport: 'DEVK900123' },
+    { sessionId: 'session-1' },
+  );
+  assert.strictEqual(denied.isError, true);
+  assert.strictEqual(denied.content[0]?.text, 'mcp_scope_denied');
+  assert.strictEqual(handlerCalls, 0);
+
+  const permitted = await target.handlers.get('get_object')!(
+    {
+      destination: 'dev',
+      objectType: 'CLAS',
+      objectName: 'ZCL_RELEASE_GATE',
+    },
+    { sessionId: 'session-1' },
+  );
+  assert.strictEqual(permitted.isError, undefined);
+  assert.strictEqual(permitted.content[0]?.text, 'permitted');
 });
 
 test('a direct write dispatch is denied before its handler or destination lease', async () => {

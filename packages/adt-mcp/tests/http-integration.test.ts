@@ -7,7 +7,7 @@
  * sap_disconnect lifecycle end-to-end.
  */
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll } from 'vitest';
 import { createTlsTransport, startTestServer } from './_tls-fixtures.js';
 
 import assert from 'node:assert';
@@ -41,7 +41,7 @@ function buildMockParams(): ConnectionParams {
 }
 
 describe('adt-mcp HTTP integration', () => {
-  before(async () => {
+  beforeAll(async () => {
     mockAdt = createMockAdtServer();
     const info = await mockAdt.start();
     mockPort = info.port;
@@ -60,7 +60,7 @@ describe('adt-mcp HTTP integration', () => {
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     await http?.close();
     await mockAdt?.stop();
   });

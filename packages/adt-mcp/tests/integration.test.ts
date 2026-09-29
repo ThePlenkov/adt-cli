@@ -1,7 +1,7 @@
 /**
  * Integration tests for the adt-mcp package.
  *
- * Uses node:test (native Node.js test runner) and the MCP SDK's
+ * Uses vitest and the MCP SDK's
  * InMemoryTransport so we can exercise every tool without stdio.
  *
  * A lightweight mock ADT HTTP server provides fixture responses.
