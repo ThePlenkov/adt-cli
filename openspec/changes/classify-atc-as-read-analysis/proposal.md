@@ -9,16 +9,18 @@ transport review.
 
 ## What changes
 
-- Classify `atc_run` and `run_unit_tests` (with or without coverage) as
-  non-mutating `read` operations.
-- Advertise and dispatch these checks for an authenticated read-only
-  Destination.
+- Keep `atc_run` and `run_unit_tests` (with or without coverage) classified
+  as `safe_execute` operations — the earlier read reclassification was
+  reverted during PR #173 review after CodeAnt flagged SAP analysis
+  execution under ordinary read credentials.
 - Retain support for stricter object-bound `safe_execute` credentials when a
   workflow elects to use them.
-- Keep repository mutations outside ordinary read authority.
+- Keep repository mutations and analysis execution outside ordinary read
+  authority.
 
 ## Impact
 
-Delegated read assistants can run ATC, AUnit, and coverage without user approval. Destination
-binding, authentication, response bounds, and optional stricter execution
-policies remain server-enforced.
+Delegated read assistants cannot run ATC, AUnit, or coverage; those
+operations require an explicit scoped `safe_execute` credential bound to
+exact object keys. Destination binding, authentication, response bounds, and
+stricter execution policies remain server-enforced.
