@@ -1,24 +1,25 @@
-# Classify Code Review checks as read analysis
+# Keep Code Review checks as bounded analysis
 
 ## Why
 
-ATC, AUnit, and code coverage are fundamental Code Review operations.
-Requiring a separate `safe_execute` approval removes them from ordinary
-non-mutating assistant catalogues and prevents an assistant from completing a
-transport review.
+ATC, AUnit, and code coverage create execution state on the SAP system, so
+they stay outside ordinary read authority. An earlier attempt to reclassify
+them as `read` was reverted during PR #173 review after a security finding
+that ordinary read credentials could then invoke SAP analysis execution.
 
 ## What changes
 
-- Classify `atc_run` and `run_unit_tests` (with or without coverage) as
-  non-mutating `read` operations.
-- Advertise and dispatch these checks for an authenticated read-only
-  Destination.
-- Retain support for stricter object-bound `safe_execute` credentials when a
+- Keep `atc_run` and `run_unit_tests` (with or without coverage) classified
+  as `safe_execute` operations.
+- Retain support for object-bound `safe_execute` credentials when a
   workflow elects to use them.
-- Keep repository mutations outside ordinary read authority.
+- Keep repository mutations and analysis execution outside ordinary read
+  authority.
 
 ## Impact
 
-Delegated read assistants can run ATC, AUnit, and coverage without user approval. Destination
-binding, authentication, response bounds, and optional stricter execution
-policies remain server-enforced.
+Delegated read assistants cannot run ATC, AUnit, or coverage; those
+operations require `safe_execute` authority. Scoped credentials bind that
+authority to exact object keys and deployment-owned execution policies.
+Destination binding, authentication, response bounds, and execution limits
+remain server-enforced.
