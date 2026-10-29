@@ -1,3 +1,13 @@
+## 0.4.26 (2026-10-29)
+
+### 🚀 Features
+
+- **adtc-cli:** add --output/-o to read commands for UTF-8 file output ([#263](https://github.com/abapify/adt-cli/pull/263))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.25 (2026-10-29)
 
 This was a version bump only for adt-cli to align it with other projects, there were no code changes.
