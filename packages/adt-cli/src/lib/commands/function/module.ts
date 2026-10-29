@@ -16,7 +16,15 @@
  */
 
 import { Command } from 'commander';
-import { readFileSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  renameSync,
+  unlinkSync,
+  statSync,
+} from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { dirname, basename, join } from 'node:path';
 import { AdkFunctionModule } from '@abapify/adk';
 import { resolveLockCorrelation } from '@abapify/adt-locks';
 import { getAdtClientV2, getCliContext } from '../../utils/adt-client-v2';
@@ -34,6 +42,35 @@ async function readSource(fileArg: string): Promise<string> {
     });
   }
   return readFileSync(fileArg, 'utf8');
+}
+
+function writeFileAtomic(filePath: string, content: string): void {
+  const dir = dirname(filePath) || '.';
+  let mode: number | undefined;
+  try {
+    mode = statSync(filePath).mode & 0o777;
+  } catch {
+    mode = undefined;
+  }
+  const tmp = join(
+    dir,
+    `.${basename(filePath)}.${process.pid}.${randomBytes(16).toString('hex')}.tmp`,
+  );
+  try {
+    writeFileSync(tmp, content, {
+      encoding: 'utf8',
+      flag: 'wx',
+      ...(mode !== undefined ? { mode } : {}),
+    });
+    renameSync(tmp, filePath);
+  } catch (error) {
+    try {
+      unlinkSync(tmp);
+    } catch {
+      // ignore cleanup errors
+    }
+    throw error;
+  }
 }
 
 function setupLoggerAndProgress(cmd: Command) {
@@ -154,11 +191,15 @@ functionModuleCommand.addCommand(
     .argument('<group>', 'Function group name')
     .argument('<name>', 'Function module name')
     .option('--json', 'Output metadata as JSON (no source)')
+    .option(
+      '-o, --output <file>',
+      'Write source to <file> in UTF-8 instead of stdout',
+    )
     .action(async function (
       this: Command,
       group: string,
       name: string,
-      options: { json: boolean },
+      options: { json: boolean; output?: string },
     ) {
       const { progress } = setupLoggerAndProgress(this);
       try {
@@ -168,6 +209,14 @@ functionModuleCommand.addCommand(
         );
         const fm = await AdkFunctionModule.get(group, name);
         progress.done();
+
+        if (options.json && options.output !== undefined) {
+          progress.done(`❌ --json and --output cannot be used together`);
+          console.error(
+            `❌ --json and --output cannot be used together (${fm.groupName}/${fm.name})`,
+          );
+          process.exit(1);
+        }
 
         if (options.json) {
           console.log(
@@ -181,13 +230,24 @@ functionModuleCommand.addCommand(
               2,
             ),
           );
-          return;
         }
 
-        progress.step('📄 Fetching source...');
-        const source = await fm.getSource();
-        progress.done();
-        process.stdout.write(source);
+        if (options.output !== undefined) {
+          progress.step('📄 Fetching source...');
+          const source = await fm.getSource();
+          progress.done();
+          progress.step(`📝 Writing source to ${options.output}...`);
+          writeFileAtomic(options.output, source);
+          progress.done();
+          console.log(
+            `✅ Source written to ${options.output} (${source.length} chars, UTF-8)`,
+          );
+        } else if (!options.json) {
+          progress.step('📄 Fetching source...');
+          const source = await fm.getSource();
+          progress.done();
+          process.stdout.write(source);
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         progress.done(`❌ ${message}`);

@@ -13,7 +13,15 @@
  */
 
 import { Command } from 'commander';
-import { readFileSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  renameSync,
+  unlinkSync,
+  statSync,
+} from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { dirname, basename, join } from 'node:path';
 import { getAdtClientV2, getCliContext } from '../../utils/adt-client-v2';
 import { createProgressReporter } from '../../utils/progress-reporter';
 import { createCliLogger } from '../../utils/logger-config';
@@ -249,6 +257,38 @@ async function readSource(fileArg: string): Promise<string> {
 }
 
 // ============================================================================
+// Helper: atomically write a file (temp + rename) to avoid partial writes
+// ============================================================================
+function writeFileAtomic(filePath: string, content: string): void {
+  const dir = dirname(filePath) || '.';
+  let mode: number | undefined;
+  try {
+    mode = statSync(filePath).mode & 0o777;
+  } catch {
+    mode = undefined;
+  }
+  const tmp = join(
+    dir,
+    `.${basename(filePath)}.${process.pid}.${randomBytes(16).toString('hex')}.tmp`,
+  );
+  try {
+    writeFileSync(tmp, content, {
+      encoding: 'utf8',
+      flag: 'wx',
+      ...(mode !== undefined ? { mode } : {}),
+    });
+    renameSync(tmp, filePath);
+  } catch (error) {
+    try {
+      unlinkSync(tmp);
+    } catch {
+      // ignore cleanup errors
+    }
+    throw error;
+  }
+}
+
+// ============================================================================
 // Command Builder
 // ============================================================================
 
@@ -385,10 +425,14 @@ export function buildObjectCrudCommands<
       .description(`Read source code of an ABAP ${def.label}`)
       .argument('<name>', `${def.label} name`)
       .option('--json', 'Output metadata as JSON (no source)')
+      .option(
+        '-o, --output <file>',
+        'Write source to <file> in UTF-8 instead of stdout (avoids shell redirect encoding issues)',
+      )
       .action(async function (
         this: Command,
         name: string,
-        options: { json: boolean },
+        options: { json: boolean; output?: string },
       ) {
         const globalOpts = this.optsWithGlobals?.() ?? {};
         const ctx = getCliContext();
@@ -409,6 +453,14 @@ export function buildObjectCrudCommands<
           const obj = await def.get(name.toUpperCase());
           progress.done();
 
+          if (options.json && options.output !== undefined) {
+            progress.done(`❌ --json and --output cannot be used together`);
+            console.error(
+              `❌ --json and --output cannot be used together (${def.label} ${obj.name})`,
+            );
+            process.exit(1);
+          }
+
           if (options.json) {
             console.log(
               JSON.stringify(
@@ -417,17 +469,35 @@ export function buildObjectCrudCommands<
                 2,
               ),
             );
-            return;
           }
 
-          if (def.getSource) {
+          if (options.output !== undefined) {
+            if (!def.getSource) {
+              progress.done(`❌ ${def.label} has no source to write`);
+              console.error(
+                `❌ ${def.label} ${obj.name} has no source; --output is not supported`,
+              );
+              process.exit(1);
+            }
             progress.step('📄 Fetching source...');
             const source = await def.getSource(obj);
             progress.done();
-            process.stdout.write(source);
-          } else {
-            console.log(`📦 ${def.label}: ${obj.name}`);
-            console.log(`   Description: ${obj.description}`);
+            progress.step(`📝 Writing source to ${options.output}...`);
+            writeFileAtomic(options.output, source);
+            progress.done();
+            console.log(
+              `✅ Source written to ${options.output} (${source.length} chars, UTF-8)`,
+            );
+          } else if (!options.json) {
+            if (def.getSource) {
+              progress.step('📄 Fetching source...');
+              const source = await def.getSource(obj);
+              progress.done();
+              process.stdout.write(source);
+            } else {
+              console.log(`📦 ${def.label}: ${obj.name}`);
+              console.log(`   Description: ${obj.description}`);
+            }
           }
         } catch (error) {
           const message =
