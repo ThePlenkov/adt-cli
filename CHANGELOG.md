@@ -1,3 +1,13 @@
+## 0.4.27 (2026-10-29)
+
+### 🩹 Fixes
+
+- **tools:** p2-cli exclude from release projects, add repo metadata, fix empty targets ([#270](https://github.com/abapify/adt-cli/pull/270))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.26 (2026-10-29)
 
 ### 🚀 Features
