@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "0.4.24",
+  "version": "0.4.25",
   "description": "Shared logger interface for abapify packages",
   "type": "module",
   "types": "./dist/index.d.mts",

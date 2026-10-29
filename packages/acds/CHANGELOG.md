@@ -1,3 +1,13 @@
+## 0.4.25 (2026-10-29)
+
+### 🩹 Fixes
+
+- **acds:** support named-argument syntax and namespace-qualified names ([#264](https://github.com/abapify/adt-cli/pull/264))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.24 (2026-10-26)
 
 This was a version bump only for @abapify/acds to align it with other projects, there were no code changes.
