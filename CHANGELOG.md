@@ -1,3 +1,13 @@
+## 0.4.28 (2026-10-30)
+
+### 🩹 Fixes
+
+- leftover review nits from PRs #183, #186, #209 ([#253](https://github.com/abapify/adt-cli/pull/253), [#271](https://github.com/abapify/adt-cli/pull/271), [#183](https://github.com/abapify/adt-cli/issues/183), [#186](https://github.com/abapify/adt-cli/issues/186), [#209](https://github.com/abapify/adt-cli/issues/209))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.27 (2026-10-29)
 
 ### 🩹 Fixes
