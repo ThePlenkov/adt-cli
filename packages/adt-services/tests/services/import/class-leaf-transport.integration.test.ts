@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { AdkPackage, AdkTransport, AdkTransportObjectRef } from '@abapify/adk';
 import { abapGitPlugin } from '@abapify/adt-plugin-abapgit';
 
 const { mockTransportGet, mockPackageGet, mockPlugin } = vi.hoisted(() => ({
@@ -20,13 +21,6 @@ const { mockTransportGet, mockPackageGet, mockPlugin } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('@abapify/adk', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@abapify/adk')>();
-  return {
-    ...actual,
-  };
-});
-
 vi.mock('../../../src/utils/format-loader', () => ({
   loadFormatPlugin: vi.fn(async () => mockPlugin),
   parseFormatSpec: vi.fn((spec: string) => ({
@@ -44,9 +38,8 @@ describe('legacy ImportService class-component acquisition', () => {
 
   beforeEach(async () => {
     outputPath = await mkdtemp(join(tmpdir(), 'legacy-class-import-'));
-    const adk = await import('@abapify/adk');
-    vi.spyOn(adk.AdkPackage, 'get').mockImplementation(mockPackageGet);
-    vi.spyOn(adk.AdkTransport, 'get').mockImplementation(mockTransportGet);
+    vi.spyOn(AdkPackage, 'get').mockImplementation(mockPackageGet);
+    vi.spyOn(AdkTransport, 'get').mockImplementation(mockTransportGet);
     mockPackageGet.mockReset().mockResolvedValue({ superPackage: undefined });
     mockPlugin.instance.registry.isSupported
       .mockReset()
@@ -69,7 +62,6 @@ describe('legacy ImportService class-component acquisition', () => {
   });
 
   it('materializes the S0DK958193 class owner from URI-less CLSD, CPUB, and fixed-width METH leaves', async () => {
-    const { AdkTransportObjectRef } = await import('@abapify/adk');
     const className = 'ZCL_VIM_DI3_UTILS';
     const classSource =
       'CLASS zcl_vim_di3_utils DEFINITION PUBLIC.\nPUBLIC SECTION.\nMETHODS get_po_items_for_docid.\nENDCLASS.\nCLASS zcl_vim_di3_utils IMPLEMENTATION.\nMETHOD get_po_items_for_docid.\nENDMETHOD.\nENDCLASS.\n';
