@@ -191,6 +191,73 @@ const config = {
 };
 
 describe('transport checkout', () => {
+  it('serializes workspace checkout through after-checkout report publication', async () => {
+    const workspace = await root();
+    const ports = dependencies(() =>
+      manifest('modified', version('before'), version('after')),
+    );
+    const flow = createAdtFlowService(ports);
+    let enteredAfterCheckout!: () => void;
+    let releaseAfterCheckout!: () => void;
+    const afterCheckoutEntered = new Promise<void>((resolve) => {
+      enteredAfterCheckout = resolve;
+    });
+    const holdAfterCheckout = new Promise<void>((resolve) => {
+      releaseAfterCheckout = resolve;
+    });
+
+    const first = flow.checkout(
+      { root: workspace, transports: ['DEVK900001'], config },
+      {
+        afterCheckout: async () => {
+          enteredAfterCheckout();
+          await holdAfterCheckout;
+        },
+      },
+    );
+    await afterCheckoutEntered;
+    const second = flow.checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      verifyInventory: true,
+      config,
+    });
+    await Promise.resolve();
+
+    expect(ports.buildManifest).toHaveBeenCalledTimes(1);
+    releaseAfterCheckout();
+    await Promise.all([first, second]);
+    expect(ports.buildManifest).toHaveBeenCalledTimes(2);
+  });
+
+  it('recomputes report inventory instead of trusting an exact-head index', async () => {
+    const workspace = await root();
+    const current = manifest('modified', version('before'), version('after'));
+    current.inventoryResolutions = current.inventory.map((item) => ({
+      outcome: 'resolved',
+      object: { pgmid: item.pgmid, type: item.type, name: item.name },
+      sourceTransport: item.sourceTransport,
+      repositoryObject: { pgmid: item.pgmid, type: item.type, name: item.name },
+    }));
+    const ports = dependencies(() => current);
+    const service = createAdtFlowService(ports);
+    await service.checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      config,
+    });
+    ports.buildManifest.mockClear();
+    const verified = await service.checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      config,
+      verifyInventory: true,
+    });
+    expect(ports.buildManifest).toHaveBeenCalledTimes(1);
+    expect(verified.fastPath).not.toBe('exact-head');
+    expect(verified.inventoryResolutions).toEqual(current.inventoryResolutions);
+  });
+
   it('materializes before then head so the workspace contains a real update', async () => {
     const workspace = await root();
     let current = manifest('modified', version('before'), version('after'));
@@ -609,6 +676,7 @@ describe('transport checkout', () => {
     expect(base.fastPath).toBe('indexed-components');
     expect(base.changed).toEqual([]);
     expect(base.removed).toEqual([]);
+    expect(base.absentObjects).toEqual([]);
     expect(base.sapCalls).toEqual({ manifest: 1, metadata: 0, source: 0 });
     expect(ports.readSource).not.toHaveBeenCalled();
     expect(ports.loadObject).not.toHaveBeenCalled();
@@ -660,6 +728,7 @@ describe('transport checkout', () => {
 
     expect(base.changed).toEqual([]);
     expect(base.removed).toEqual([]);
+    expect(base.absentObjects).toEqual([]);
     expect(ports.readSource).not.toHaveBeenCalled();
     expect(
       await readFile(
@@ -679,6 +748,7 @@ describe('transport checkout', () => {
         'utf8',
       ),
     ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(base.absentObjects).toEqual([]);
 
     const head = await flow.checkout({
       root: workspace,
@@ -694,6 +764,62 @@ describe('transport checkout', () => {
         'utf8',
       ),
     ).toBe('source task-head\n');
+  });
+
+  it('reports an exact added object absent when base checkout has no retained files', async () => {
+    const workspace = await root();
+    const ports = dependencies(() =>
+      manifest('added', undefined, version('task-head')),
+    );
+    const base = await createAdtFlowService(ports).checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      mode: 'base',
+      config,
+    });
+
+    expect(base.absentObjects).toEqual(['R3TR/CLAS/ZCL_SAMPLE']);
+  });
+
+  it('does not report filtered application-component objects as absent', async () => {
+    const workspace = await root();
+    const ports = dependencies(() =>
+      manifest('added', undefined, version('task-head')),
+    );
+    ports.loadObject.mockResolvedValue({
+      object: { name: 'ZCL_SAMPLE' },
+      packagePath: ['ZROOT', 'ZROOT_FEATURE'],
+      applicationComponent: 'ZOTHER',
+    });
+    const result = await createAdtFlowService(ports).checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      mode: 'base',
+      config: {
+        ...config,
+        include: { objectTypes: ['CLAS'], applicationComponents: ['ZAPP'] },
+      },
+    });
+
+    expect(result.absentObjects).toEqual([]);
+  });
+
+  it('does not report package-filtered objects as absent', async () => {
+    const workspace = await root();
+    const ports = dependencies(() =>
+      manifest('added', undefined, version('task-head')),
+    );
+    const result = await createAdtFlowService(ports).checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      mode: 'base',
+      config: {
+        ...config,
+        include: { objectTypes: ['CLAS'], packages: ['ZOTHER'] },
+      },
+    });
+
+    expect(result.absentObjects).toEqual([]);
   });
 
   it('shows a first-observed deletion even when no descriptor exists', async () => {
@@ -854,7 +980,33 @@ describe('transport checkout', () => {
 
   it('indexes only a manifest-inexact checkout when the caller explicitly opts in', async () => {
     const workspace = await root();
-    const current = manifest('modified', version('before'), version('after'));
+    const current = manifest('added', undefined, version('prior-task'));
+    const ports = dependencies(() => current);
+    const flow = createAdtFlowService(ports);
+    await flow.checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      config,
+    });
+    await rm(join(workspace, '.adt/objects/CLAS/zcl_sample.clas.adt.json'));
+    current.entries[0]!.object.pgmid = 'r3tr';
+    current.entries[0]!.object.type = 'clas';
+    current.entries[0]!.object.name = 'zcl_sample';
+    ports.readSource.mockClear();
+    ports.loadObject.mockClear();
+    current.entries.push({
+      object: {
+        pgmid: 'R3TR',
+        type: 'PROG',
+        name: 'ZNEW_PROGRAM',
+        packageName: 'ZROOT_FEATURE',
+      },
+      component: { id: 'main' },
+      sourceTransport: 'DEVK900001',
+      changeKind: 'added',
+      exact: true,
+      head: version('new-program'),
+    });
     current.entries.push({
       object: {
         pgmid: 'R3TR',
@@ -871,18 +1023,20 @@ describe('transport checkout', () => {
         message: 'No exact version belongs to the scope.',
       },
     });
-    const ports = dependencies(() => current);
 
     await expect(
-      createAdtFlowService(ports).checkout({
+      flow.checkout({
         root: workspace,
         transports: ['DEVK900001'],
+        mode: 'base',
         config,
         indexOnInexact: true,
       }),
     ).resolves.toMatchObject({
+      mode: 'base',
+      indexedOnly: true,
       changed: [],
-      descriptors: expect.arrayContaining(['.adt/tr/DEVK900001.json']),
+      absentObjects: ['R3TR/PROG/ZNEW_PROGRAM'],
       skipped: [
         {
           object: 'CLAS/ZCL_ZZZ_INEXACT',
@@ -895,6 +1049,12 @@ describe('transport checkout', () => {
     });
     expect(ports.readSource).not.toHaveBeenCalled();
     expect(ports.loadObject).not.toHaveBeenCalled();
+    expect(
+      await readFile(
+        join(workspace, 'src/feature/zcl_sample.clas.abap'),
+        'utf8',
+      ),
+    ).toBe('source prior-task\n');
   });
 
   it('indexes inventory without requiring a materializing format plugin', async () => {
@@ -916,6 +1076,72 @@ describe('transport checkout', () => {
     });
     expect(ports.readSource).not.toHaveBeenCalled();
     expect(ports.loadObject).not.toHaveBeenCalled();
+  });
+
+  it('limits metadata lookups while calculating indexed base absence', async () => {
+    const workspace = await root();
+    const current = manifest('added', undefined, version('first'));
+    current.entries.push(
+      {
+        object: {
+          pgmid: 'R3TR',
+          type: 'CLAS',
+          name: 'ZCL_EXTRA',
+          packageName: 'ZROOT_FEATURE',
+        },
+        component: { id: 'main' },
+        sourceTransport: 'DEVK900001',
+        changeKind: 'added',
+        exact: true,
+        head: version('second'),
+      },
+      {
+        object: {
+          pgmid: 'R3TR',
+          type: 'CLAS',
+          name: 'ZCL_INEXACT',
+          packageName: 'ZROOT_FEATURE',
+        },
+        component: { id: 'main' },
+        sourceTransport: 'DEVK900001',
+        changeKind: 'ambiguous',
+        exact: false,
+        diagnostic: {
+          code: 'SOURCE_HISTORY_SCOPE_VERSION_MISSING',
+          message: 'No exact version belongs to the scope.',
+        },
+      },
+    );
+    const ports = dependencies(() => current);
+    let active = 0;
+    let maximumActive = 0;
+    ports.loadObject.mockImplementation(async (identity) => {
+      active += 1;
+      maximumActive = Math.max(maximumActive, active);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      active -= 1;
+      return {
+        object: { name: identity.name },
+        packagePath: ['ZROOT', 'ZROOT_FEATURE'],
+        applicationComponent: 'ZAPP',
+      };
+    });
+
+    const result = await createAdtFlowService(ports).checkout({
+      root: workspace,
+      transports: ['DEVK900001'],
+      mode: 'base',
+      indexOnInexact: true,
+      config: {
+        ...config,
+        concurrency: { metadata: 1 },
+        include: { objectTypes: ['CLAS'], applicationComponents: ['ZAPP'] },
+      },
+    });
+
+    expect(result.indexedOnly).toBe(true);
+    expect(maximumActive).toBe(1);
+    expect(ports.loadObject).toHaveBeenCalledTimes(3);
   });
 
   it('retains existing exact object descriptors in a refreshed inventory', async () => {

@@ -1,4 +1,5 @@
-import { basename } from 'node:path';
+import { realpath } from 'node:fs/promises';
+import { basename, resolve } from 'node:path';
 import type {
   TransportSourceManifest,
   TransportSourceManifestEntry,
@@ -535,6 +536,8 @@ interface GroupResult {
   descriptorPaths: string[];
   ownedPaths: string[];
   reusedIndexedComponent: boolean;
+  hasPresentObject?: boolean;
+  excludedByApplicationComponent?: boolean;
 }
 
 function emptyGroupResult(): GroupResult {
@@ -664,6 +667,7 @@ async function reuseGroupIfExact(
     descriptorPaths: [descriptorPath],
     ownedPaths,
     reusedIndexedComponent: true,
+    hasPresentObject: true,
   };
 }
 
@@ -768,6 +772,7 @@ async function buildMaterializedResult(
     descriptorPaths: [descriptorPath],
     ownedPaths: pending.ownedPaths,
     reusedIndexedComponent: reusedIndexedSource,
+    hasPresentObject: true,
   };
 }
 
@@ -787,6 +792,7 @@ async function maybeSkipByAppComponent(
       descriptorPaths: [],
       ownedPaths: pending.ownedPaths,
       reusedIndexedComponent: false,
+      excludedByApplicationComponent: true,
     };
   }
   return undefined;
@@ -826,6 +832,12 @@ async function resolveEmptyGroup(
   }
   if (mode === 'base' && pending.previous) {
     return handleBaseEmptyGroup(ctx, identity, descriptorPath);
+  }
+  if (
+    mode === 'base' &&
+    pending.ownedPaths.some((path) => !path.startsWith('.adt/'))
+  ) {
+    return { ...emptyGroupResult(), hasPresentObject: true };
   }
   return emptyGroupResult();
 }
@@ -877,7 +889,10 @@ async function processGroup(ctx: ProcessGroupContext): Promise<GroupResult> {
   calls.metadata += model.metadataCalls ?? 1;
 
   if (isApplicationComponentExcluded(ctx.config, model)) {
-    return emptyGroupResult();
+    return {
+      ...emptyGroupResult(),
+      excludedByApplicationComponent: true,
+    };
   }
 
   if (canReuseIndexed) {
@@ -898,8 +913,46 @@ async function processGroup(ctx: ProcessGroupContext): Promise<GroupResult> {
 }
 
 export interface AdtFlowService {
-  checkout(input: FlowCheckoutInput): Promise<FlowCheckoutResult>;
+  checkout(
+    input: FlowCheckoutInput,
+    hooks?: FlowCheckoutHooks,
+  ): Promise<FlowCheckoutResult>;
   index(input: FlowIndexInput): Promise<FlowCheckoutResult>;
+}
+
+/** Lifecycle hooks run while the workspace is exclusively checked out. */
+export interface FlowCheckoutHooks {
+  beforeCheckout?: () => Promise<void>;
+  afterCheckout?: (result: FlowCheckoutResult) => Promise<void>;
+}
+
+const workspaceLocks = new Map<string, Promise<void>>();
+
+async function withWorkspaceLock<T>(
+  root: string,
+  operation: () => Promise<T>,
+): Promise<T> {
+  let key = resolve(root);
+  try {
+    key = await realpath(root);
+  } catch {
+    // Checkout will report its normal root/path error when the directory is absent.
+  }
+
+  const previous = workspaceLocks.get(key) ?? Promise.resolve();
+  let release!: () => void;
+  const current = new Promise<void>((resolveCurrent) => {
+    release = resolveCurrent;
+  });
+  const queued = previous.then(() => current);
+  workspaceLocks.set(key, queued);
+  await previous;
+  try {
+    return await operation();
+  } finally {
+    release();
+    if (workspaceLocks.get(key) === queued) workspaceLocks.delete(key);
+  }
 }
 
 interface FlowContext {
@@ -1298,6 +1351,7 @@ interface CheckoutAccumulator {
 
 type ProcessedGroups = CheckoutAccumulator & {
   reusedIndexedComponent: boolean;
+  absentObjects: string[];
 };
 
 async function processAllGroups(
@@ -1316,6 +1370,7 @@ async function processAllGroups(
   const ownedPaths = new Set<string>();
   const ownedOwners = new Map<string, string>();
   const descriptorPaths: string[] = [];
+  const absentObjects = new Set<string>();
   let reusedIndexedComponent = false;
   await Promise.all(
     groups.map(async (group) => {
@@ -1349,6 +1404,16 @@ async function processAllGroups(
         ownedOwners.set(path, group.identity.canonical);
       }
       if (result.reusedIndexedComponent) reusedIndexedComponent = true;
+      if (
+        ctx.mode === 'base' &&
+        group.entries.every(
+          (entry) => entry.exact && entry.changeKind === 'added',
+        ) &&
+        !result.excludedByApplicationComponent &&
+        !result.hasPresentObject
+      ) {
+        absentObjects.add(group.identity.canonical);
+      }
     }),
   );
   return {
@@ -1357,6 +1422,7 @@ async function processAllGroups(
     ownedPaths,
     ownedOwners,
     reusedIndexedComponent,
+    absentObjects: [...absentObjects].sort(compareStrings),
   };
 }
 
@@ -1527,7 +1593,8 @@ async function addExistingObjectDescriptors(
   ctx: FlowContext,
   groups: ManifestContext['groups'],
   accum: CheckoutAccumulator,
-): Promise<void> {
+): Promise<Set<string>> {
+  const present = new Set<string>();
   await Promise.all(
     groups.map(async ({ identity }) => {
       const descriptorPath = objectDescriptorPath(identity);
@@ -1544,9 +1611,11 @@ async function addExistingObjectDescriptors(
         descriptor.formatDigest === ctx.formatDigest
       ) {
         accum.descriptorPaths.push(descriptorPath);
+        present.add(identity.canonical);
       }
     }),
   );
+  return present;
 }
 
 function buildCheckoutResult(
@@ -1577,6 +1646,9 @@ function buildCheckoutResult(
     unchanged: plan.unchanged.filter((path) => !descriptorSet.has(path)),
     descriptors: [...descriptorSet].sort(),
     skipped,
+    inventory: manifest.inventory,
+    inventoryResolutions: manifest.inventoryResolutions,
+    absentObjects: processed.absentObjects,
     sapCalls: ctx.calls,
     fastPath: reusedIndexedComponent ? 'indexed-components' : 'none',
   };
@@ -1587,7 +1659,9 @@ async function checkoutFlow(
   dependencies: FlowCheckoutDependencies,
 ): Promise<FlowCheckoutResult> {
   const ctx = createCheckoutContext(input, dependencies);
-  const fast = await tryExactHeadFastPath(ctx);
+  const fast = input.verifyInventory
+    ? undefined
+    : await tryExactHeadFastPath(ctx);
   if (fast) return fast;
 
   let manifestContext: ManifestContext;
@@ -1599,7 +1673,7 @@ async function checkoutFlow(
       error instanceof AdtFlowError &&
       error.code === 'manifest_inexact'
     ) {
-      return indexFlow(input, dependencies);
+      return indexFlow({ ...input, mode: input.mode }, dependencies);
     }
     throw error;
   }
@@ -1644,6 +1718,61 @@ async function checkoutFlow(
   );
 }
 
+async function isIndexedBaseObjectAbsent(
+  ctx: FlowContext,
+  manifestContext: ManifestContext,
+  presentDescriptors: ReadonlySet<string>,
+  group: ManifestContext['groups'][number],
+): Promise<boolean> {
+  const { identity, entries } = group;
+  if (
+    !entries.every((entry) => entry.exact && entry.changeKind === 'added') ||
+    presentDescriptors.has(identity.canonical)
+  ) {
+    return false;
+  }
+
+  const key = `${repositoryType(identity.pgmid, identity.type).toUpperCase()}/${identity.name.toUpperCase()}`;
+  if (manifestContext.srcFilesByObject.get(key)?.length) return false;
+
+  if ((ctx.config.include?.applicationComponents?.length ?? 0) === 0) {
+    return true;
+  }
+
+  try {
+    const model = await manifestContext.metadataLimiter.run(() =>
+      ctx.dependencies.loadObject(identity),
+    );
+    ctx.calls.metadata += model.metadataCalls ?? 1;
+    return !isApplicationComponentExcluded(ctx.config, model);
+  } catch {
+    // Do not claim absence when the application-component filter cannot be evaluated.
+    return false;
+  }
+}
+
+async function indexedBaseAbsentObjects(
+  ctx: FlowContext,
+  manifestContext: ManifestContext,
+  presentDescriptors: ReadonlySet<string>,
+): Promise<string[]> {
+  const absent = await Promise.all(
+    manifestContext.groups.map(async (group) =>
+      (await isIndexedBaseObjectAbsent(
+        ctx,
+        manifestContext,
+        presentDescriptors,
+        group,
+      ))
+        ? group.identity.canonical
+        : undefined,
+    ),
+  );
+  return absent
+    .filter((identity): identity is string => identity !== undefined)
+    .sort(compareStrings);
+}
+
 async function indexFlow(
   input: FlowIndexInput,
   dependencies: FlowCheckoutDependencies,
@@ -1651,7 +1780,7 @@ async function indexFlow(
   // Reuse partial manifest classification so inexact entries become durable
   // omissions, but deliberately skip every source/materialization path.
   const ctx = createFlowContext(
-    { ...input, mode: 'head', partial: true },
+    { ...input, mode: input.mode ?? 'head', partial: true },
     dependencies,
   );
   const manifestContext = await buildManifestAndGroups(ctx);
@@ -1661,6 +1790,7 @@ async function indexFlow(
     ownedPaths: new Set<string>(),
     ownedOwners: new Map<string, string>(),
     reusedIndexedComponent: false,
+    absentObjects: [],
   };
   await addOmittedObjectDescriptors(
     ctx,
@@ -1668,7 +1798,18 @@ async function indexFlow(
     manifestContext.skipped,
     indexed,
   );
-  await addExistingObjectDescriptors(ctx, manifestContext.groups, indexed);
+  const presentDescriptors = await addExistingObjectDescriptors(
+    ctx,
+    manifestContext.groups,
+    indexed,
+  );
+  if (ctx.mode === 'base') {
+    indexed.absentObjects = await indexedBaseAbsentObjects(
+      ctx,
+      manifestContext,
+      presentDescriptors,
+    );
+  }
   await addTransportDescriptors(ctx, manifestContext.manifest, indexed, true);
   indexed.desired.sort((left, right) => compareStrings(left.path, right.path));
   const plan = await planRepositoryChanges(
@@ -1678,24 +1819,34 @@ async function indexFlow(
     indexed.ownedOwners,
   );
   await applyRepositoryPlan(ctx.root, plan);
-  return buildCheckoutResult(
-    ctx,
-    manifestContext.manifest,
-    manifestContext.skipped,
-    plan,
-    indexed,
-  );
+  return {
+    ...buildCheckoutResult(
+      ctx,
+      manifestContext.manifest,
+      manifestContext.skipped,
+      plan,
+      indexed,
+    ),
+    indexedOnly: true,
+  };
 }
 
 export function createAdtFlowService(
   dependencies: FlowCheckoutDependencies,
 ): AdtFlowService {
   return {
-    async checkout(input): Promise<FlowCheckoutResult> {
-      return checkoutFlow(input, dependencies);
+    async checkout(input, hooks): Promise<FlowCheckoutResult> {
+      return withWorkspaceLock(input.root, async () => {
+        await hooks?.beforeCheckout?.();
+        const result = await checkoutFlow(input, dependencies);
+        await hooks?.afterCheckout?.(result);
+        return result;
+      });
     },
     async index(input): Promise<FlowCheckoutResult> {
-      return indexFlow(input, dependencies);
+      return withWorkspaceLock(input.root, () =>
+        indexFlow(input, dependencies),
+      );
     },
   };
 }
