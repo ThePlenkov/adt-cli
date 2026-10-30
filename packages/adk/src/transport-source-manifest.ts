@@ -4,6 +4,7 @@ import { getGlobalContext } from './base/global-context';
 import { getEndpointForType, normalizeObjectName } from './base/registry';
 import { createAdkFactory } from './factory';
 import { AdkFunctionModule } from './objects/repository/fugr';
+import { resolveClassComponentOwnerName } from './objects/cts/transport-object-owner';
 import {
   resolveTransportObjects,
   type ResolvedTransportObjects,
@@ -790,11 +791,16 @@ function resolveLimuReference(
   if (pgmid !== 'LIMU') return undefined;
   const wbtype = reference.wbtype?.trim().toUpperCase();
   // CLAS/OC, CLAS/OSU and CLAS/OM describe CTS leaves, not separate
-  // repository objects. Every class component uses the complete CLAS model.
-  const ownerType = wbtype?.split('/')[0] === 'CLAS' ? 'CLAS' : wbtype;
-  const ownerName = ownerType
-    ? repositoryNameFromUri(reference.uri, ownerType)
-    : undefined;
+  // repository objects. Resolve their owner consistently with legacy imports.
+  const classOwnerName = resolveClassComponentOwnerName(reference);
+  const ownerType = classOwnerName
+    ? 'CLAS'
+    : wbtype?.split('/')[0] === 'CLAS'
+      ? 'CLAS'
+      : wbtype;
+  const ownerName =
+    classOwnerName ??
+    (ownerType ? repositoryNameFromUri(reference.uri, ownerType) : undefined);
   if (ownerType && ownerName) {
     return {
       pgmid: 'R3TR',

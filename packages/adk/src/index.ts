@@ -195,6 +195,8 @@ export {
   MergedTransportView,
   matchesSelector,
   resolveTransportObjects,
+  resolveClassComponentOwnerName,
+  type TransportObjectOwnerReference,
   type TransportObjectSelector,
   type TransportResponse,
   type ResolvedTransportObjects,

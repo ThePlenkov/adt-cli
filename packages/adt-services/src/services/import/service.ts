@@ -9,6 +9,7 @@ import {
   matchesSelector,
   getGlobalContext,
   createAdkFactory,
+  resolveClassComponentOwnerName,
 } from '@abapify/adk';
 import type { AdkTransportObjectRef } from '@abapify/adk';
 import { Readable } from 'node:stream';
@@ -324,7 +325,10 @@ export class ImportService {
         const progress = ++processed;
         try {
           // Check if plugin supports this object type
-          if (!plugin.instance.registry.isSupported(objRef.type)) {
+          const pluginObjectType = resolveClassComponentOwnerName(objRef.raw)
+            ? 'CLAS'
+            : objRef.type;
+          if (!plugin.instance.registry.isSupported(pluginObjectType)) {
             results.skipped++;
             if (options.debug) {
               console.log(

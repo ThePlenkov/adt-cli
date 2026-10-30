@@ -61,6 +61,7 @@ interface FakeTransportObjectOptions {
   wbtype?: string;
   deleted?: boolean;
   objectUri?: string;
+  includeReferenceUri?: boolean;
   factoryName?: string;
   metadata?: Record<string, unknown>;
   load?: () => Promise<void>;
@@ -95,6 +96,7 @@ function transportObject({
   wbtype = type,
   deleted = false,
   objectUri = `/sap/bc/adt/programs/programs/${name.toLowerCase()}`,
+  includeReferenceUri = true,
   factoryName = name,
   metadata = {},
   load,
@@ -111,7 +113,7 @@ function transportObject({
     type,
     name,
     wbtype,
-    uri: objectUri,
+    ...(includeReferenceUri ? { uri: objectUri } : {}),
     objFunc: deleted ? 'D' : '',
     isDeleted: deleted,
   };
@@ -836,130 +838,140 @@ describe('buildTransportSourceManifest', () => {
     ]);
   });
 
-  it('materializes a full abapGit class from three real CTS subtype leaves and immutable ADT sources', async () => {
-    const name = 'ZCL_VIM_DI3_UTILS';
-    const objects = [
-      ['CLSD', 'CLAS/OC'],
-      ['CPUB', 'CLAS/OSU'],
-      ['METH', 'CLAS/OM'],
-    ].map(([type, wbtype]) =>
-      transportObject({
-        name:
-          type === 'METH' ? `${name.padEnd(30)}GET_PO_ITEMS_FOR_DOCID` : name,
-        type,
-        wbtype,
-        pgmid: 'LIMU',
-        factoryName: name,
-        objectUri: '/sap/bc/adt/oo/classes/zcl_vim_di3_utils',
-        metadata: rootSourceMetadata(),
-      }),
-    );
-    mockResolution(
-      objects,
-      objects.map(() => 'S0DK958193'),
-      ['S0DK958193'],
-    );
-    const { ctx } = contextWithVersions(
-      vi
-        .fn()
-        .mockResolvedValue([
-          version('00002', 0, ['S0DK958193']),
-          version('00001', 1, ['S0DK958000']),
-        ]),
-    );
-    const head =
-      'CLASS zcl_vim_di3_utils DEFINITION PUBLIC.\nPUBLIC SECTION.\nMETHODS get_po_items_for_docid.\nENDCLASS.\nCLASS zcl_vim_di3_utils IMPLEMENTATION.\nMETHOD get_po_items_for_docid.\nENDMETHOD.\nENDCLASS.\n';
-    const base =
-      'CLASS zcl_vim_di3_utils DEFINITION PUBLIC.\nENDCLASS.\nCLASS zcl_vim_di3_utils IMPLEMENTATION.\nENDCLASS.\n';
-    const workspace = await mkdtemp(join(tmpdir(), 'cts-class-fixture-'));
-    try {
-      const service = createAdtFlowService({
-        format: abapgitFormatPlugin,
-        buildManifest: (transports) =>
-          buildTransportSourceManifest(transports, {}, ctx),
-        readSource: async (selected) => (selected.id === '00002' ? head : base),
-        loadObject: async (identity) => ({
-          object: {
-            name: identity.name,
-            dataSync: {
-              name: identity.name,
-              language: 'EN',
-              include: [{ includeType: 'main' }],
-            },
-            getIncludeSource: async () => {
-              throw new Error('mutable source read forbidden');
-            },
-          },
-          packagePath: ['ZPACKAGE'],
-        }),
-      });
-      const config = { format: { id: 'abapgit' } };
-      await service.checkout({
-        root: workspace,
-        transports: ['S0DK958193'],
-        mode: 'base',
-        verifyInventory: true,
-        config,
-      });
-      expect(
-        await readFile(
-          join(workspace, 'src/zcl_vim_di3_utils.clas.abap'),
-          'utf8',
-        ),
-      ).toBe(base);
-      const result = await service.checkout({
-        root: workspace,
-        transports: ['S0DK958193'],
-        verifyInventory: true,
-        config,
-      });
-      expect(
-        await readFile(
-          join(workspace, 'src/zcl_vim_di3_utils.clas.abap'),
-          'utf8',
-        ),
-      ).toBe(head);
-      expect(
-        await readFile(
-          join(workspace, 'src/zcl_vim_di3_utils.clas.xml'),
-          'utf8',
-        ),
-      ).toContain('ZCL_VIM_DI3_UTILS');
-      expect(result.skipped).toEqual([]);
-      expect(result.inventory).toHaveLength(3);
-      expect(result.inventoryResolutions).toHaveLength(3);
-      expect(
-        result.inventoryResolutions?.every(
-          (resolution) =>
-            resolution.outcome === 'resolved' &&
-            resolution.repositoryObject.type === 'CLAS',
-        ),
-      ).toBe(true);
-      expect(result.inventoryResolutions?.map(({ object }) => object)).toEqual(
-        objects.map(({ pgmid, type, name: objectName }) => ({
-          pgmid,
+  it.each([
+    { ctsUriMode: 'with CTS URI', includeReferenceUri: true },
+    { ctsUriMode: 'without CTS URI', includeReferenceUri: false },
+  ])(
+    'materializes a full abapGit class from three CTS subtype leaves $ctsUriMode and immutable ADT sources',
+    async ({ includeReferenceUri }) => {
+      const name = 'ZCL_VIM_DI3_UTILS';
+      const objects = [
+        ['CLSD', 'CLAS/OC'],
+        ['CPUB', 'CLAS/OSU'],
+        ['METH', 'CLAS/OM'],
+      ].map(([type, wbtype]) =>
+        transportObject({
+          name:
+            type === 'METH' ? `${name.padEnd(30)}GET_PO_ITEMS_FOR_DOCID` : name,
           type,
-          name: objectName,
-        })),
-      );
-      const descriptor = JSON.parse(
-        await readFile(join(workspace, '.adt/tr/S0DK958193.json'), 'utf8'),
-      );
-      expect(descriptor.inventory).toHaveLength(3);
-      expect(descriptor.objects).toHaveLength(1);
-      expect(descriptor.incomplete).toBeUndefined();
-      execFileSync('git', ['init', '--quiet'], { cwd: workspace });
-      execFileSync('git', ['add', 'src/'], { cwd: workspace });
-      expect(
-        execFileSync('git', ['show', ':src/zcl_vim_di3_utils.clas.abap'], {
-          cwd: workspace,
-          encoding: 'utf8',
+          wbtype,
+          pgmid: 'LIMU',
+          factoryName: name,
+          objectUri: '/sap/bc/adt/oo/classes/zcl_vim_di3_utils',
+          includeReferenceUri,
+          metadata: rootSourceMetadata(),
         }),
-      ).toBe(head);
-    } finally {
-      await rm(workspace, { recursive: true, force: true });
-    }
-  });
+      );
+      mockResolution(
+        objects,
+        objects.map(() => 'S0DK958193'),
+        ['S0DK958193'],
+      );
+      const { ctx } = contextWithVersions(
+        vi
+          .fn()
+          .mockResolvedValue([
+            version('00002', 0, ['S0DK958193']),
+            version('00001', 1, ['S0DK958000']),
+          ]),
+      );
+      const head =
+        'CLASS zcl_vim_di3_utils DEFINITION PUBLIC.\nPUBLIC SECTION.\nMETHODS get_po_items_for_docid.\nENDCLASS.\nCLASS zcl_vim_di3_utils IMPLEMENTATION.\nMETHOD get_po_items_for_docid.\nENDMETHOD.\nENDCLASS.\n';
+      const base =
+        'CLASS zcl_vim_di3_utils DEFINITION PUBLIC.\nENDCLASS.\nCLASS zcl_vim_di3_utils IMPLEMENTATION.\nENDCLASS.\n';
+      const workspace = await mkdtemp(join(tmpdir(), 'cts-class-fixture-'));
+      try {
+        const service = createAdtFlowService({
+          format: abapgitFormatPlugin,
+          buildManifest: (transports) =>
+            buildTransportSourceManifest(transports, {}, ctx),
+          readSource: async (selected) =>
+            selected.id === '00002' ? head : base,
+          loadObject: async (identity) => ({
+            object: {
+              name: identity.name,
+              dataSync: {
+                name: identity.name,
+                language: 'EN',
+                include: [{ includeType: 'main' }],
+              },
+              getIncludeSource: async () => {
+                throw new Error('mutable source read forbidden');
+              },
+            },
+            packagePath: ['ZPACKAGE'],
+          }),
+        });
+        const config = { format: { id: 'abapgit' } };
+        await service.checkout({
+          root: workspace,
+          transports: ['S0DK958193'],
+          mode: 'base',
+          verifyInventory: true,
+          config,
+        });
+        expect(
+          await readFile(
+            join(workspace, 'src/zcl_vim_di3_utils.clas.abap'),
+            'utf8',
+          ),
+        ).toBe(base);
+        const result = await service.checkout({
+          root: workspace,
+          transports: ['S0DK958193'],
+          verifyInventory: true,
+          config,
+        });
+        expect(
+          await readFile(
+            join(workspace, 'src/zcl_vim_di3_utils.clas.abap'),
+            'utf8',
+          ),
+        ).toBe(head);
+        expect(
+          await readFile(
+            join(workspace, 'src/zcl_vim_di3_utils.clas.xml'),
+            'utf8',
+          ),
+        ).toContain('ZCL_VIM_DI3_UTILS');
+        expect(result.skipped).toEqual([]);
+        expect(result.inventory).toHaveLength(3);
+        expect(result.inventoryResolutions).toHaveLength(3);
+        expect(
+          result.inventoryResolutions?.every(
+            (resolution) =>
+              resolution.outcome === 'resolved' &&
+              resolution.repositoryObject.type === 'CLAS',
+          ),
+        ).toBe(true);
+        expect(
+          result.inventoryResolutions?.map(({ object }) => object),
+        ).toEqual(
+          objects.map(({ pgmid, type, name: objectName }) => ({
+            pgmid,
+            type,
+            name: objectName,
+          })),
+        );
+        const descriptor = JSON.parse(
+          await readFile(join(workspace, '.adt/tr/S0DK958193.json'), 'utf8'),
+        );
+        expect(descriptor.inventory).toHaveLength(3);
+        expect(descriptor.objects).toHaveLength(1);
+        expect(descriptor.incomplete).toBeUndefined();
+        execFileSync('git', ['init', '--quiet'], { cwd: workspace });
+        execFileSync('git', ['add', 'src/'], { cwd: workspace });
+        expect(
+          execFileSync('git', ['show', ':src/zcl_vim_di3_utils.clas.abap'], {
+            cwd: workspace,
+            encoding: 'utf8',
+          }),
+        ).toBe(head);
+      } finally {
+        await rm(workspace, { recursive: true, force: true });
+      }
+    },
+  );
 
   it.each([
     ['CLSD', 'CLAS/OC'],
