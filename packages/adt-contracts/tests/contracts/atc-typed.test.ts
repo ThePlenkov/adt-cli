@@ -181,7 +181,8 @@ class AtcFormtemplateGetScenario extends TypedContractScenario<FormtemplateContr
       (c) => c.checkObject.name === 'CI_ANALYZE_WHERE',
     );
     expect(analyzeWhere).toBeDefined();
-    // The implementing class name is the checkId findings carry
+    // Checks carry the implementing class; finding checkIds are GUIDs resolved
+    // via the documentation page
     expect(analyzeWhere!.checkObject.content?.implementingClass?.name).toBe(
       'CL_CI_TEST_SELECT_TAW_A',
     );

@@ -149,9 +149,9 @@ class AtcWorklistScenario extends Scenario<typeof atcworklist> {
  * GET /sap/bc/adt/atc/checkvariants/formtemplate?chkvName={name}
  *
  * The form template is the check catalog: each available check category
- * lists its checks, and each check's implementingClass name is the checkId
- * that ATC worklist findings carry (the basis for check category
- * enrichment).
+ * lists its checks. Checks carry the implementing class and their category
+ * assignment; finding checkIds are GUIDs resolved via the documentation
+ * page (the basis for check category enrichment).
  */
 class ChkvFormTemplateScenario extends Scenario<typeof chkvFormTemplate> {
   readonly schema = chkvFormTemplate;
