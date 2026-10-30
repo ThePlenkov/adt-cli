@@ -20,6 +20,60 @@ import { selectSearchObject, type SearchObject } from './object-selection';
 /** Default number of concurrent SAP requests during import */
 const IMPORT_CONCURRENCY = 5;
 
+interface ImportObjectBatch {
+  objects: AdkTransportObjectRef[];
+  pluginObjectType: string;
+  classOwnerName?: string;
+  loadRef?: AdkTransportObjectRef;
+}
+
+function isRepositoryClassOwner(object: AdkTransportObjectRef): boolean {
+  return (
+    object.pgmid.trim().toUpperCase() === 'R3TR' &&
+    object.type.trim().toUpperCase() === 'CLAS'
+  );
+}
+
+function getClassOwnerName(object: AdkTransportObjectRef): string | undefined {
+  if (isRepositoryClassOwner(object)) {
+    return object.name.trim().toUpperCase() || undefined;
+  }
+  return resolveClassComponentOwnerName(object.raw);
+}
+
+/** Load and serialize a class once when a transport lists several class leaves. */
+function groupImportObjectsByClassOwner(
+  objects: AdkTransportObjectRef[],
+): ImportObjectBatch[] {
+  const batches: ImportObjectBatch[] = [];
+  const classBatches = new Map<string, ImportObjectBatch>();
+
+  for (const object of objects) {
+    const ownerName = getClassOwnerName(object);
+    if (!ownerName) {
+      batches.push({ objects: [object], pluginObjectType: object.type });
+      continue;
+    }
+
+    let batch = classBatches.get(ownerName);
+    if (!batch) {
+      batch = {
+        objects: [],
+        pluginObjectType: 'CLAS',
+        classOwnerName: ownerName,
+      };
+      classBatches.set(ownerName, batch);
+      batches.push(batch);
+    }
+    batch.objects.push(object);
+    if (!batch.loadRef || isRepositoryClassOwner(object)) {
+      batch.loadRef = object;
+    }
+  }
+
+  return batches;
+}
+
 /**
  * Resolve full package path from root to the given package.
  * Traverses the ADK package hierarchy upward until the root is reached.
@@ -291,8 +345,10 @@ export class ImportService {
     let objectsToImport = activeObjects;
     if (options.objectTypes && options.objectTypes.length > 0) {
       const types = options.objectTypes.map((t) => t.toUpperCase());
-      objectsToImport = activeObjects.filter((o) =>
-        types.includes(o.type.toUpperCase()),
+      objectsToImport = activeObjects.filter(
+        (o) =>
+          types.includes(o.type.toUpperCase()) ||
+          (getClassOwnerName(o) !== undefined && types.includes('CLAS')),
       );
       if (options.debug) {
         console.log(
@@ -307,6 +363,7 @@ export class ImportService {
     const filesRemoved: string[] = [];
     const total = objectsToImport.length;
     let processed = 0;
+    const importBatches = groupImportObjectsByClassOwner(objectsToImport);
 
     // Build the import context once — shared by the active-object pass
     // (line ~380 below), the orphan-sync missing-object deletion path
@@ -320,29 +377,39 @@ export class ImportService {
     console.log(`📦 Processing ${total} active objects...`);
 
     // Process active objects in parallel
-    await Readable.from(objectsToImport).forEach(
-      async (objRef) => {
-        const progress = ++processed;
+    await Readable.from(importBatches).forEach(
+      async ({
+        objects: batchObjects,
+        pluginObjectType,
+        classOwnerName,
+        loadRef,
+      }: ImportObjectBatch) => {
+        const firstProgress = processed + 1;
+        processed += batchObjects.length;
+        const objRef = loadRef ?? batchObjects[0];
+        if (!objRef) return;
+
         try {
           // Check if plugin supports this object type
-          const pluginObjectType = resolveClassComponentOwnerName(objRef.raw)
-            ? 'CLAS'
-            : objRef.type;
           if (!plugin.instance.registry.isSupported(pluginObjectType)) {
-            results.skipped++;
-            if (options.debug) {
-              console.log(
-                `  ⏭️ [${progress}/${total}] ${objRef.type} ${objRef.name}: type not supported`,
+            results.skipped += batchObjects.length;
+            if (options.debug)
+              batchObjects.forEach((object, index) =>
+                console.log(
+                  `  ⏭️ [${firstProgress + index}/${total}] ${object.type} ${object.name}: type not supported`,
+                ),
               );
-            }
             return;
           }
 
-          console.log(
-            `  🔄 [${progress}/${total}] ${objRef.type} ${objRef.name}`,
+          batchObjects.forEach((object, index) =>
+            console.log(
+              `  🔄 [${firstProgress + index}/${total}] ${object.type} ${object.name}`,
+            ),
           );
 
-          // Load the ADK object
+          // Class-component refs share the complete CLAS repository object.
+          // Prefer its explicit R3TR ref when present and report each leaf.
           const adkObject = await objRef.load();
 
           if (!adkObject) {
@@ -352,41 +419,68 @@ export class ImportService {
               options.removeMissingObjects &&
               typeof deleteFn === 'function'
             ) {
-              console.log(
-                `  🗑️  [${progress}/${total}] ${objRef.type} ${objRef.name}: not found in SAP → removing local files`,
-              );
-              try {
-                const delResult = await deleteFn(
-                  { pgmid: objRef.pgmid, type: objRef.type, name: objRef.name },
-                  options.outputPath,
-                  importContext,
+              // A missing class-component load can also mean a transient ADT
+              // error because AdkTransportObjectRef.load() returns undefined
+              // for both. Keep the legacy leaf deletion boundary; the leaf key
+              // cannot match and erase the complete CLAS source file.
+              const deleteObjects = classOwnerName
+                ? batchObjects.filter(
+                    (object) => !isRepositoryClassOwner(object),
+                  )
+                : [objRef];
+              results.skipped += batchObjects.length - deleteObjects.length;
+
+              for (const deleteObject of deleteObjects) {
+                const deleteRef = {
+                  pgmid: deleteObject.pgmid,
+                  type: deleteObject.type,
+                  name: deleteObject.name,
+                };
+                const deleteReason = classOwnerName
+                  ? 'class owner could not be loaded; checking leaf files only'
+                  : 'not found in SAP';
+                console.log(
+                  `  🗑️  [${firstProgress}/${total}] ${deleteRef.type} ${deleteRef.name}: ${deleteReason}`,
                 );
-                if (delResult.success) {
-                  results.deleted++;
-                  filesRemoved.push(...delResult.filesRemoved);
-                } else {
-                  results.skipped++;
-                }
-              } catch (error) {
-                results.skipped++;
-                if (options.debug) {
-                  console.log(
-                    `  ⚠️  ${objRef.type} ${objRef.name}: delete failed — ${error instanceof Error ? error.message : String(error)}`,
+                try {
+                  const delResult = await deleteFn(
+                    deleteRef,
+                    options.outputPath,
+                    importContext,
                   );
+                  if (delResult.success) {
+                    if (classOwnerName && delResult.filesRemoved.length === 0) {
+                      results.skipped++;
+                    } else {
+                      results.deleted++;
+                    }
+                    filesRemoved.push(...delResult.filesRemoved);
+                  } else {
+                    results.skipped++;
+                  }
+                } catch (error) {
+                  results.skipped++;
+                  if (options.debug) {
+                    console.log(
+                      `  ⚠️  ${deleteRef.type} ${deleteRef.name}: delete failed — ${error instanceof Error ? error.message : String(error)}`,
+                    );
+                  }
                 }
               }
             } else {
-              results.skipped++;
+              results.skipped += batchObjects.length;
               if (options.debug) {
-                console.log(
-                  `  ⏭️ ${objRef.type} ${objRef.name}: not found in SAP (skipped)`,
+                batchObjects.forEach((object) =>
+                  console.log(
+                    `  ⏭️ ${object.type} ${object.name}: not found in SAP (skipped)`,
+                  ),
                 );
               }
             }
             return;
           }
 
-          // Delegate to plugin - import object from SAP to local files
+          // Delegate serialization once for the complete object owner.
           const result = await plugin.instance.format.import(
             adkObject as any, // ADK object type
             options.outputPath,
@@ -394,18 +488,25 @@ export class ImportService {
           );
 
           if (result.success) {
-            objectsByType[objRef.type] = (objectsByType[objRef.type] || 0) + 1;
-            results.success++;
+            for (const object of batchObjects) {
+              objectsByType[object.type] =
+                (objectsByType[object.type] || 0) + 1;
+            }
+            results.success += batchObjects.length;
           } else {
-            results.failed++;
-            console.log(
-              `  ❌ ${objRef.type} ${objRef.name}: ${result.errors?.join(', ') || 'unknown error'}`,
+            results.failed += batchObjects.length;
+            batchObjects.forEach((object) =>
+              console.log(
+                `  ❌ ${object.type} ${object.name}: ${result.errors?.join(', ') || 'unknown error'}`,
+              ),
             );
           }
         } catch (error) {
-          results.failed++;
-          console.log(
-            `  ❌ ${objRef.type} ${objRef.name}: ${error instanceof Error ? error.message : String(error)}`,
+          results.failed += batchObjects.length;
+          batchObjects.forEach((object) =>
+            console.log(
+              `  ❌ ${object.type} ${object.name}: ${error instanceof Error ? error.message : String(error)}`,
+            ),
           );
         }
       },

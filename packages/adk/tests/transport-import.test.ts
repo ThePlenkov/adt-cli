@@ -756,14 +756,32 @@ describe('AdkTransportObjectRef', () => {
       owner: 'ZCL_VIM_DI3_UTILS',
     },
     {
+      type: 'CLSD',
+      wbtype: 'CLAS',
+      name: 'ZCL_VIM_DI3_UTILS',
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
       type: 'CPUB',
       wbtype: 'CLAS/OSU',
       name: 'ZCL_VIM_DI3_UTILS',
       owner: 'ZCL_VIM_DI3_UTILS',
     },
     {
+      type: 'CPUB',
+      wbtype: 'CLAS',
+      name: 'ZCL_VIM_DI3_UTILS',
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
       type: 'METH',
       wbtype: 'CLAS/OM',
+      name: `${'ZCL_VIM_DI3_UTILS'.padEnd(30)}GET_PO_ITEMS_FOR_DOCID`,
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
+      type: 'METH',
+      wbtype: 'CLAS',
       name: `${'ZCL_VIM_DI3_UTILS'.padEnd(30)}GET_PO_ITEMS_FOR_DOCID`,
       owner: 'ZCL_VIM_DI3_UTILS',
     },

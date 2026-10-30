@@ -40,7 +40,11 @@ function hasMatchingWorkbenchType(
   expectedWbtype: string,
 ): boolean {
   const normalizedWbtype = normalizeReferenceValue(actualWbtype);
-  return normalizedWbtype === undefined || normalizedWbtype === expectedWbtype;
+  return (
+    normalizedWbtype === undefined ||
+    normalizedWbtype === 'CLAS' ||
+    normalizedWbtype === expectedWbtype
+  );
 }
 
 function classNameFromUri(uri: string | undefined): string | undefined {
