@@ -270,4 +270,58 @@ describe('legacy ImportService class-component acquisition', () => {
     expect(result.filesRemoved).toBeUndefined();
     expect(await readFile(staleClassFile, 'utf8')).toBe('stale source');
   });
+
+  it('continues leaf cleanup when delete throws synchronously or rejects', async () => {
+    const className = 'ZCL_DELETE_ERRORS';
+    const classGet = vi.fn(async () => {
+      throw Object.assign(new Error('service unavailable'), {
+        response: { status: 503 },
+      });
+    });
+    const client = {
+      adt: { oo: { classes: { get: classGet } } },
+    };
+    const objects = [
+      { type: 'CLSD', name: className },
+      { type: 'METH', name: `${className.padEnd(30)}MISSING_METHOD` },
+    ].map(
+      (object) =>
+        new AdkTransportObjectRef({ client } as never, {
+          pgmid: 'LIMU',
+          wbtype: 'CLAS',
+          obj_func: '',
+          ...object,
+        }),
+    );
+    mockTransportGet.mockResolvedValue({
+      number: 'S0DK958193',
+      description: 'S0D class parent scope',
+      objects,
+    });
+    mockPlugin.instance.format.delete
+      .mockImplementationOnce(() => {
+        throw new Error('synchronous delete failure');
+      })
+      .mockImplementationOnce(() =>
+        Promise.reject(new Error('asynchronous delete failure')),
+      );
+
+    const { ImportService } =
+      await import('../../../src/services/import/service');
+    const result = await new ImportService().importTransport({
+      transportNumber: 'S0DK958193',
+      outputPath,
+      format: 'abapgit',
+      removeMissingObjects: true,
+    });
+
+    expect(classGet).toHaveBeenCalledTimes(1);
+    expect(mockPlugin.instance.format.delete).toHaveBeenCalledTimes(2);
+    expect(result.results).toEqual({
+      success: 0,
+      skipped: 2,
+      failed: 0,
+      deleted: 0,
+    });
+  });
 });

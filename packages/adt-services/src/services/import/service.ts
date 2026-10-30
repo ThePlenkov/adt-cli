@@ -1,7 +1,11 @@
 import { loadFormatPlugin, parseFormatSpec } from '../../utils/format-loader';
 import { getConfig } from '../../utils/destinations';
 import { parseTransportNumbers } from '../../utils/transport-numbers';
-import type { ImportContext, FormatOptionValue } from '@abapify/adt-plugin';
+import type {
+  DeleteResult,
+  ImportContext,
+  FormatOptionValue,
+} from '@abapify/adt-plugin';
 import {
   AdkPackage,
   AdkTransport,
@@ -25,6 +29,29 @@ interface ImportObjectBatch {
   pluginObjectType: string;
   classOwnerName?: string;
   loadRef?: AdkTransportObjectRef;
+}
+
+type MissingObjectDelete = (
+  objectRef: { pgmid: string; type: string; name: string },
+  targetPath: string,
+  context: ImportContext,
+) => Promise<DeleteResult>;
+
+interface MissingObjectCleanupResult {
+  deleted: number;
+  skipped: number;
+  filesRemoved: string[];
+}
+
+interface MissingObjectCleanupContext {
+  batch: ImportObjectBatch;
+  fallbackObject: AdkTransportObjectRef;
+  deleteFn: MissingObjectDelete;
+  outputPath: string;
+  importContext: ImportContext;
+  firstProgress: number;
+  total: number;
+  debug?: boolean;
 }
 
 function isRepositoryClassOwner(object: AdkTransportObjectRef): boolean {
@@ -72,6 +99,65 @@ function groupImportObjectsByClassOwner(
   }
 
   return batches;
+}
+
+async function cleanupMissingObjectBatch({
+  batch,
+  fallbackObject,
+  deleteFn,
+  outputPath,
+  importContext,
+  firstProgress,
+  total,
+  debug,
+}: MissingObjectCleanupContext): Promise<MissingObjectCleanupResult> {
+  // AdkTransportObjectRef.load() maps transient errors and absence to undefined.
+  // Undefined therefore cannot authorize deleting a complete class owner.
+  const deleteObjects = batch.classOwnerName
+    ? batch.objects.filter((object) => !isRepositoryClassOwner(object))
+    : [fallbackObject];
+  const result: MissingObjectCleanupResult = {
+    deleted: 0,
+    skipped: batch.objects.length - deleteObjects.length,
+    filesRemoved: [],
+  };
+
+  for (const deleteObject of deleteObjects) {
+    const deleteRef = {
+      pgmid: deleteObject.pgmid,
+      type: deleteObject.type,
+      name: deleteObject.name,
+    };
+    const deleteReason = batch.classOwnerName
+      ? 'class owner could not be loaded; checking leaf files only'
+      : 'not found in SAP';
+    console.log(
+      `  🗑️  [${firstProgress}/${total}] ${deleteRef.type} ${deleteRef.name}: ${deleteReason}`,
+    );
+    let delResult: DeleteResult | undefined;
+    try {
+      delResult = await deleteFn(deleteRef, outputPath, importContext);
+    } catch (error: unknown) {
+      if (debug) {
+        console.log(
+          `  ⚠️  ${deleteRef.type} ${deleteRef.name}: delete failed — ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    if (
+      !delResult?.success ||
+      (batch.classOwnerName && delResult.filesRemoved.length === 0)
+    ) {
+      result.skipped++;
+      continue;
+    }
+
+    result.deleted++;
+    result.filesRemoved.push(...delResult.filesRemoved);
+  }
+
+  return result;
 }
 
 /**
@@ -413,60 +499,29 @@ export class ImportService {
           const adkObject = await objRef.load();
 
           if (!adkObject) {
-            // Object is in TR but doesn't exist in SAP (possible orphan — deleted without obj_func=D)
             const deleteFn = plugin.instance.format.delete;
             if (
               options.removeMissingObjects &&
               typeof deleteFn === 'function'
             ) {
-              // A missing class-component load can also mean a transient ADT
-              // error because AdkTransportObjectRef.load() returns undefined
-              // for both. Keep the legacy leaf deletion boundary; the leaf key
-              // cannot match and erase the complete CLAS source file.
-              const deleteObjects = classOwnerName
-                ? batchObjects.filter(
-                    (object) => !isRepositoryClassOwner(object),
-                  )
-                : [objRef];
-              results.skipped += batchObjects.length - deleteObjects.length;
-
-              for (const deleteObject of deleteObjects) {
-                const deleteRef = {
-                  pgmid: deleteObject.pgmid,
-                  type: deleteObject.type,
-                  name: deleteObject.name,
-                };
-                const deleteReason = classOwnerName
-                  ? 'class owner could not be loaded; checking leaf files only'
-                  : 'not found in SAP';
-                console.log(
-                  `  🗑️  [${firstProgress}/${total}] ${deleteRef.type} ${deleteRef.name}: ${deleteReason}`,
-                );
-                try {
-                  const delResult = await deleteFn(
-                    deleteRef,
-                    options.outputPath,
-                    importContext,
-                  );
-                  if (delResult.success) {
-                    if (classOwnerName && delResult.filesRemoved.length === 0) {
-                      results.skipped++;
-                    } else {
-                      results.deleted++;
-                    }
-                    filesRemoved.push(...delResult.filesRemoved);
-                  } else {
-                    results.skipped++;
-                  }
-                } catch (error) {
-                  results.skipped++;
-                  if (options.debug) {
-                    console.log(
-                      `  ⚠️  ${deleteRef.type} ${deleteRef.name}: delete failed — ${error instanceof Error ? error.message : String(error)}`,
-                    );
-                  }
-                }
-              }
+              const cleanup = await cleanupMissingObjectBatch({
+                batch: {
+                  objects: batchObjects,
+                  pluginObjectType,
+                  classOwnerName,
+                  loadRef,
+                },
+                fallbackObject: objRef,
+                deleteFn,
+                outputPath: options.outputPath,
+                importContext,
+                firstProgress,
+                total,
+                debug: options.debug,
+              });
+              results.deleted += cleanup.deleted;
+              results.skipped += cleanup.skipped;
+              filesRemoved.push(...cleanup.filesRemoved);
             } else {
               results.skipped += batchObjects.length;
               if (options.debug) {
