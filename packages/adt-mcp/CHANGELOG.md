@@ -1,3 +1,14 @@
+## 0.4.29 (2026-10-30)
+
+### 🚀 Features
+
+- **adt-atc:** bound + harden documentation bridge reads ([#268](https://github.com/abapify/adt-cli/pull/268))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.28 (2026-10-30)
 
 This was a version bump only for adt-mcp to align it with other projects, there were no code changes.

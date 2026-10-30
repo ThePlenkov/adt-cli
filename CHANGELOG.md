@@ -1,3 +1,19 @@
+## 0.4.29 (2026-10-30)
+
+### 🚀 Features
+
+- **adt-atc:** bound + harden documentation bridge reads ([#268](https://github.com/abapify/adt-cli/pull/268))
+- **adt-plugin-gcts:** schema-validate LIMU sub-object examples ([#266](https://github.com/abapify/adt-cli/pull/266))
+
+### 🩹 Fixes
+
+- **adt-schemas:** qualify local elements in ATC custom XSDs + checkId docs ([#267](https://github.com/abapify/adt-cli/pull/267))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.28 (2026-10-30)
 
 ### 🩹 Fixes

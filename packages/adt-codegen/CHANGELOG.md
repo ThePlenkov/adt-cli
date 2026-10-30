@@ -1,3 +1,7 @@
+## 0.4.29 (2026-10-30)
+
+This was a version bump only for @abapify/adt-codegen to align it with other projects, there were no code changes.
+
 ## 0.4.28 (2026-10-30)
 
 This was a version bump only for @abapify/adt-codegen to align it with other projects, there were no code changes.

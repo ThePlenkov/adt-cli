@@ -1,3 +1,14 @@
+## 0.4.29 (2026-10-30)
+
+### 🚀 Features
+
+- **adt-plugin-gcts:** schema-validate LIMU sub-object examples ([#266](https://github.com/abapify/adt-cli/pull/266))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.28 (2026-10-30)
 
 This was a version bump only for adt-plugin-gcts to align it with other projects, there were no code changes.

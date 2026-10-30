@@ -1,3 +1,14 @@
+## 0.4.29 (2026-10-30)
+
+### 🩹 Fixes
+
+- **adt-schemas:** qualify local elements in ATC custom XSDs + checkId docs ([#267](https://github.com/abapify/adt-cli/pull/267))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.28 (2026-10-30)
 
 This was a version bump only for adt-schemas to align it with other projects, there were no code changes.
