@@ -15,6 +15,7 @@
 import type { AdkContext } from '../../base/context';
 import { getGlobalContext } from '../../base/global-context';
 import { getRegisteredTypes } from '../../base/registry';
+import { resolveClassComponentOwnerName } from './transport-object-owner';
 import type { TransportGetResponse } from '../../base/adt';
 import type { TransportData } from './transport/transport.types';
 
@@ -201,7 +202,10 @@ export class AdkTransportObjectRef {
     // Use the factory to get the object
     // The factory handles type resolution and loading
     try {
-      const obj = adk.get(this.name, factoryType);
+      const classOwnerName = resolveClassComponentOwnerName(this.data);
+      const obj = classOwnerName
+        ? adk.get(classOwnerName, 'CLAS')
+        : adk.get(this.name, factoryType);
       // Check if object has load method (AdkGenericObject doesn't)
       if ('load' in obj && typeof obj.load === 'function') {
         await obj.load();

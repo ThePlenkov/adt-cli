@@ -127,6 +127,7 @@ vi.mock('@abapify/adk', () => {
     AdkTransport: { get: adkTransportGetFn },
     AdkPackage: { get: vi.fn() },
     MergedTransportView: FakeMergedTransportView,
+    resolveClassComponentOwnerName: vi.fn(() => undefined),
     matchesSelector: (
       obj: { objFunc: string; pgmid: string },
       sel: { objFunc?: string; pgmid?: string },

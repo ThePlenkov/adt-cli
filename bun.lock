@@ -286,6 +286,9 @@
         "@abapify/adt-plugin": "0.4.29",
         "zod": "^4.4.3",
       },
+      "devDependencies": {
+        "@abapify/adt-plugin-abapgit": "0.4.29",
+      },
     },
     "packages/adt-lint": {
       "name": "@abapify/adt-lint",

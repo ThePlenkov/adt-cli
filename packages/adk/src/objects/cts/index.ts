@@ -3,6 +3,8 @@
  */
 
 export * from './transport';
+export { resolveClassComponentOwnerName } from './transport-object-owner';
+export type { TransportObjectOwnerReference } from './transport-object-owner';
 
 // New simplified transport for import operations
 export {

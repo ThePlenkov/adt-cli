@@ -1,7 +1,11 @@
 import { loadFormatPlugin, parseFormatSpec } from '../../utils/format-loader';
 import { getConfig } from '../../utils/destinations';
 import { parseTransportNumbers } from '../../utils/transport-numbers';
-import type { ImportContext, FormatOptionValue } from '@abapify/adt-plugin';
+import type {
+  DeleteResult,
+  ImportContext,
+  FormatOptionValue,
+} from '@abapify/adt-plugin';
 import {
   AdkPackage,
   AdkTransport,
@@ -9,6 +13,7 @@ import {
   matchesSelector,
   getGlobalContext,
   createAdkFactory,
+  resolveClassComponentOwnerName,
 } from '@abapify/adk';
 import type { AdkTransportObjectRef } from '@abapify/adk';
 import { Readable } from 'node:stream';
@@ -18,6 +23,142 @@ import { selectSearchObject, type SearchObject } from './object-selection';
 
 /** Default number of concurrent SAP requests during import */
 const IMPORT_CONCURRENCY = 5;
+
+interface ImportObjectBatch {
+  objects: AdkTransportObjectRef[];
+  pluginObjectType: string;
+  classOwnerName?: string;
+  loadRef?: AdkTransportObjectRef;
+}
+
+type MissingObjectDelete = (
+  objectRef: { pgmid: string; type: string; name: string },
+  targetPath: string,
+  context: ImportContext,
+) => Promise<DeleteResult>;
+
+interface MissingObjectCleanupResult {
+  deleted: number;
+  skipped: number;
+  filesRemoved: string[];
+}
+
+interface MissingObjectCleanupContext {
+  batch: ImportObjectBatch;
+  fallbackObject: AdkTransportObjectRef;
+  deleteFn: MissingObjectDelete;
+  outputPath: string;
+  importContext: ImportContext;
+  firstProgress: number;
+  total: number;
+  debug?: boolean;
+}
+
+function isRepositoryClassOwner(object: AdkTransportObjectRef): boolean {
+  return (
+    object.pgmid.trim().toUpperCase() === 'R3TR' &&
+    object.type.trim().toUpperCase() === 'CLAS'
+  );
+}
+
+function getClassOwnerName(object: AdkTransportObjectRef): string | undefined {
+  if (isRepositoryClassOwner(object)) {
+    return object.name.trim().toUpperCase() || undefined;
+  }
+  return resolveClassComponentOwnerName(object.raw);
+}
+
+/** Load and serialize a class once when a transport lists several class leaves. */
+function groupImportObjectsByClassOwner(
+  objects: AdkTransportObjectRef[],
+): ImportObjectBatch[] {
+  const batches: ImportObjectBatch[] = [];
+  const classBatches = new Map<string, ImportObjectBatch>();
+
+  for (const object of objects) {
+    const ownerName = getClassOwnerName(object);
+    if (!ownerName) {
+      batches.push({ objects: [object], pluginObjectType: object.type });
+      continue;
+    }
+
+    let batch = classBatches.get(ownerName);
+    if (!batch) {
+      batch = {
+        objects: [],
+        pluginObjectType: 'CLAS',
+        classOwnerName: ownerName,
+      };
+      classBatches.set(ownerName, batch);
+      batches.push(batch);
+    }
+    batch.objects.push(object);
+    if (!batch.loadRef || isRepositoryClassOwner(object)) {
+      batch.loadRef = object;
+    }
+  }
+
+  return batches;
+}
+
+async function cleanupMissingObjectBatch({
+  batch,
+  fallbackObject,
+  deleteFn,
+  outputPath,
+  importContext,
+  firstProgress,
+  total,
+  debug,
+}: MissingObjectCleanupContext): Promise<MissingObjectCleanupResult> {
+  // AdkTransportObjectRef.load() maps transient errors and absence to undefined.
+  // Undefined therefore cannot authorize deleting a complete class owner.
+  const deleteObjects = batch.classOwnerName
+    ? batch.objects.filter((object) => !isRepositoryClassOwner(object))
+    : [fallbackObject];
+  const result: MissingObjectCleanupResult = {
+    deleted: 0,
+    skipped: batch.objects.length - deleteObjects.length,
+    filesRemoved: [],
+  };
+
+  for (const deleteObject of deleteObjects) {
+    const deleteRef = {
+      pgmid: deleteObject.pgmid,
+      type: deleteObject.type,
+      name: deleteObject.name,
+    };
+    const deleteReason = batch.classOwnerName
+      ? 'class owner could not be loaded; checking leaf files only'
+      : 'not found in SAP';
+    console.log(
+      `  🗑️  [${firstProgress}/${total}] ${deleteRef.type} ${deleteRef.name}: ${deleteReason}`,
+    );
+    let delResult: DeleteResult | undefined;
+    try {
+      delResult = await deleteFn(deleteRef, outputPath, importContext);
+    } catch (error: unknown) {
+      if (debug) {
+        console.log(
+          `  ⚠️  ${deleteRef.type} ${deleteRef.name}: delete failed — ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    if (
+      !delResult?.success ||
+      (batch.classOwnerName && delResult.filesRemoved.length === 0)
+    ) {
+      result.skipped++;
+      continue;
+    }
+
+    result.deleted++;
+    result.filesRemoved.push(...delResult.filesRemoved);
+  }
+
+  return result;
+}
 
 /**
  * Resolve full package path from root to the given package.
@@ -290,8 +431,10 @@ export class ImportService {
     let objectsToImport = activeObjects;
     if (options.objectTypes && options.objectTypes.length > 0) {
       const types = options.objectTypes.map((t) => t.toUpperCase());
-      objectsToImport = activeObjects.filter((o) =>
-        types.includes(o.type.toUpperCase()),
+      objectsToImport = activeObjects.filter(
+        (o) =>
+          types.includes(o.type.toUpperCase()) ||
+          (getClassOwnerName(o) !== undefined && types.includes('CLAS')),
       );
       if (options.debug) {
         console.log(
@@ -306,6 +449,7 @@ export class ImportService {
     const filesRemoved: string[] = [];
     const total = objectsToImport.length;
     let processed = 0;
+    const importBatches = groupImportObjectsByClassOwner(objectsToImport);
 
     // Build the import context once — shared by the active-object pass
     // (line ~380 below), the orphan-sync missing-object deletion path
@@ -319,70 +463,79 @@ export class ImportService {
     console.log(`📦 Processing ${total} active objects...`);
 
     // Process active objects in parallel
-    await Readable.from(objectsToImport).forEach(
-      async (objRef) => {
-        const progress = ++processed;
+    await Readable.from(importBatches).forEach(
+      async ({
+        objects: batchObjects,
+        pluginObjectType,
+        classOwnerName,
+        loadRef,
+      }: ImportObjectBatch) => {
+        const firstProgress = processed + 1;
+        processed += batchObjects.length;
+        const objRef = loadRef ?? batchObjects[0];
+        if (!objRef) return;
+
         try {
           // Check if plugin supports this object type
-          if (!plugin.instance.registry.isSupported(objRef.type)) {
-            results.skipped++;
-            if (options.debug) {
-              console.log(
-                `  ⏭️ [${progress}/${total}] ${objRef.type} ${objRef.name}: type not supported`,
+          if (!plugin.instance.registry.isSupported(pluginObjectType)) {
+            results.skipped += batchObjects.length;
+            if (options.debug)
+              batchObjects.forEach((object, index) =>
+                console.log(
+                  `  ⏭️ [${firstProgress + index}/${total}] ${object.type} ${object.name}: type not supported`,
+                ),
               );
-            }
             return;
           }
 
-          console.log(
-            `  🔄 [${progress}/${total}] ${objRef.type} ${objRef.name}`,
+          batchObjects.forEach((object, index) =>
+            console.log(
+              `  🔄 [${firstProgress + index}/${total}] ${object.type} ${object.name}`,
+            ),
           );
 
-          // Load the ADK object
+          // Class-component refs share the complete CLAS repository object.
+          // Prefer its explicit R3TR ref when present and report each leaf.
           const adkObject = await objRef.load();
 
           if (!adkObject) {
-            // Object is in TR but doesn't exist in SAP (possible orphan — deleted without obj_func=D)
             const deleteFn = plugin.instance.format.delete;
             if (
               options.removeMissingObjects &&
               typeof deleteFn === 'function'
             ) {
-              console.log(
-                `  🗑️  [${progress}/${total}] ${objRef.type} ${objRef.name}: not found in SAP → removing local files`,
-              );
-              try {
-                const delResult = await deleteFn(
-                  { pgmid: objRef.pgmid, type: objRef.type, name: objRef.name },
-                  options.outputPath,
-                  importContext,
-                );
-                if (delResult.success) {
-                  results.deleted++;
-                  filesRemoved.push(...delResult.filesRemoved);
-                } else {
-                  results.skipped++;
-                }
-              } catch (error) {
-                results.skipped++;
-                if (options.debug) {
-                  console.log(
-                    `  ⚠️  ${objRef.type} ${objRef.name}: delete failed — ${error instanceof Error ? error.message : String(error)}`,
-                  );
-                }
-              }
+              const cleanup = await cleanupMissingObjectBatch({
+                batch: {
+                  objects: batchObjects,
+                  pluginObjectType,
+                  classOwnerName,
+                  loadRef,
+                },
+                fallbackObject: objRef,
+                deleteFn,
+                outputPath: options.outputPath,
+                importContext,
+                firstProgress,
+                total,
+                debug: options.debug,
+              });
+              results.deleted += cleanup.deleted;
+              results.skipped += cleanup.skipped;
+              filesRemoved.push(...cleanup.filesRemoved);
             } else {
-              results.skipped++;
+              results.skipped += batchObjects.length;
               if (options.debug) {
-                console.log(
-                  `  ⏭️ ${objRef.type} ${objRef.name}: not found in SAP (skipped)`,
+                batchObjects.forEach((object) =>
+                  console.log(
+                    `  ⏭️ ${object.type} ${object.name}: not found in SAP (skipped)`,
+                  ),
                 );
               }
             }
             return;
           }
 
-          // Delegate to plugin - import object from SAP to local files
+          // Delegate serialization once for the complete object owner.
           const result = await plugin.instance.format.import(
             adkObject as any, // ADK object type
             options.outputPath,
@@ -390,18 +543,25 @@ export class ImportService {
           );
 
           if (result.success) {
-            objectsByType[objRef.type] = (objectsByType[objRef.type] || 0) + 1;
-            results.success++;
+            for (const object of batchObjects) {
+              objectsByType[object.type] =
+                (objectsByType[object.type] || 0) + 1;
+            }
+            results.success += batchObjects.length;
           } else {
-            results.failed++;
-            console.log(
-              `  ❌ ${objRef.type} ${objRef.name}: ${result.errors?.join(', ') || 'unknown error'}`,
+            results.failed += batchObjects.length;
+            batchObjects.forEach((object) =>
+              console.log(
+                `  ❌ ${object.type} ${object.name}: ${result.errors?.join(', ') || 'unknown error'}`,
+              ),
             );
           }
         } catch (error) {
-          results.failed++;
-          console.log(
-            `  ❌ ${objRef.type} ${objRef.name}: ${error instanceof Error ? error.message : String(error)}`,
+          results.failed += batchObjects.length;
+          batchObjects.forEach((object) =>
+            console.log(
+              `  ❌ ${object.type} ${object.name}: ${error instanceof Error ? error.message : String(error)}`,
+            ),
           );
         }
       },

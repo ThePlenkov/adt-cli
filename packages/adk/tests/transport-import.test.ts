@@ -748,6 +748,82 @@ describe('AdkTransportObjectRef', () => {
     expect(factoryGet).toHaveBeenCalledWith('ZAPI_STRUCTURE', 'TABL/DS');
   });
 
+  it.each([
+    {
+      type: 'CLSD',
+      wbtype: 'CLAS/OC',
+      name: 'ZCL_VIM_DI3_UTILS',
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
+      type: 'CLSD',
+      wbtype: 'CLAS',
+      name: 'ZCL_VIM_DI3_UTILS',
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
+      type: 'CPUB',
+      wbtype: 'CLAS/OSU',
+      name: 'ZCL_VIM_DI3_UTILS',
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
+      type: 'CPUB',
+      wbtype: 'CLAS',
+      name: 'ZCL_VIM_DI3_UTILS',
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
+      type: 'METH',
+      wbtype: 'CLAS/OM',
+      name: `${'ZCL_VIM_DI3_UTILS'.padEnd(30)}GET_PO_ITEMS_FOR_DOCID`,
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
+      type: 'METH',
+      wbtype: 'CLAS',
+      name: `${'ZCL_VIM_DI3_UTILS'.padEnd(30)}GET_PO_ITEMS_FOR_DOCID`,
+      owner: 'ZCL_VIM_DI3_UTILS',
+    },
+    {
+      type: 'METH',
+      wbtype: 'CLAS/OM',
+      name: `${'Z'.repeat(30)}GET_PO_ITEMS_FOR_DOCID`,
+      owner: 'Z'.repeat(30),
+    },
+  ])(
+    'loads $type/$wbtype through its CLAS repository owner without a CTS URI',
+    async ({ type, wbtype, name, owner }) => {
+      const { AdkTransportObjectRef } = await import('../src/index');
+      const objRef = new AdkTransportObjectRef({} as any, {
+        pgmid: 'LIMU',
+        type,
+        wbtype,
+        name,
+      });
+
+      await objRef.load();
+
+      expect(factoryGet).toHaveBeenCalledWith(owner, 'CLAS');
+    },
+  );
+
+  it('uses the class URI when a METH name occupies the full fixed-width owner field', async () => {
+    const { AdkTransportObjectRef } = await import('../src/index');
+    const owner = `Z${'C'.repeat(29)}`;
+    const objRef = new AdkTransportObjectRef({} as any, {
+      pgmid: 'LIMU',
+      type: 'METH',
+      wbtype: 'CLAS/OM',
+      name: `${'X'.repeat(30)}GET_PO_ITEMS_FOR_DOCID`,
+      uri: `/sap/bc/adt/oo/classes/${owner.toLowerCase()}/source/main`,
+    });
+
+    await objRef.load();
+
+    expect(factoryGet).toHaveBeenCalledWith(owner, 'CLAS');
+  });
+
   it('falls back to the normalized CTS type when the workbench subtype is absent or unregistered', async () => {
     const { AdkTransportObjectRef } = await import('../src/index');
     const absentSubtype = new AdkTransportObjectRef({} as any, {
