@@ -1,3 +1,13 @@
+## 0.4.30 (2026-10-30)
+
+### 🩹 Fixes
+
+- **flow:** materialize CTS class components and report checkout coverage ([#276](https://github.com/abapify/adt-cli/pull/276))
+
+### ❤️ Thank You
+
+- Petr Plenkov @ThePlenkov
+
 ## 0.4.29 (2026-10-30)
 
 ### 🚀 Features

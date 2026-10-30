@@ -1,3 +1,7 @@
+## 0.4.30 (2026-10-30)
+
+This was a version bump only for @abapify/abap-ast to align it with other projects, there were no code changes.
+
 ## 0.4.29 (2026-10-30)
 
 This was a version bump only for @abapify/abap-ast to align it with other projects, there were no code changes.
