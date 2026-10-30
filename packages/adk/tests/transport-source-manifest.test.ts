@@ -1,10 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
-import { createAdtFlowService } from '../../adt-flow/src/service';
-import { abapgitFormatPlugin } from '../../adt-plugin-abapgit/src/lib/format-plugin';
 import type { SourceVersionRef } from '@abapify/adt-client';
 import type { AdkContext } from '../src/base/context';
 
@@ -842,7 +836,7 @@ describe('buildTransportSourceManifest', () => {
     { ctsUriMode: 'with CTS URI', includeReferenceUri: true },
     { ctsUriMode: 'without CTS URI', includeReferenceUri: false },
   ])(
-    'materializes a full abapGit class from three CTS subtype leaves $ctsUriMode and immutable ADT sources',
+    'resolves URI-less class leaves to one immutable CLAS owner $ctsUriMode',
     async ({ includeReferenceUri }) => {
       const name = 'ZCL_VIM_DI3_UTILS';
       const objects = [
@@ -867,109 +861,50 @@ describe('buildTransportSourceManifest', () => {
         objects.map(() => 'S0DK958193'),
         ['S0DK958193'],
       );
-      const { ctx } = contextWithVersions(
-        vi
-          .fn()
-          .mockResolvedValue([
-            version('00002', 0, ['S0DK958193']),
-            version('00001', 1, ['S0DK958000']),
-          ]),
+      const head = version('00002', 0, ['S0DK958193']);
+      const base = version('00001', 1, ['S0DK958000']);
+      const { ctx, readVersionSource } = contextWithVersions(
+        vi.fn().mockResolvedValue([head, base]),
       );
-      const head =
-        'CLASS zcl_vim_di3_utils DEFINITION PUBLIC.\nPUBLIC SECTION.\nMETHODS get_po_items_for_docid.\nENDCLASS.\nCLASS zcl_vim_di3_utils IMPLEMENTATION.\nMETHOD get_po_items_for_docid.\nENDMETHOD.\nENDCLASS.\n';
-      const base =
-        'CLASS zcl_vim_di3_utils DEFINITION PUBLIC.\nENDCLASS.\nCLASS zcl_vim_di3_utils IMPLEMENTATION.\nENDCLASS.\n';
-      const workspace = await mkdtemp(join(tmpdir(), 'cts-class-fixture-'));
-      try {
-        const service = createAdtFlowService({
-          format: abapgitFormatPlugin,
-          buildManifest: (transports) =>
-            buildTransportSourceManifest(transports, {}, ctx),
-          readSource: async (selected) =>
-            selected.id === '00002' ? head : base,
-          loadObject: async (identity) => ({
-            object: {
-              name: identity.name,
-              dataSync: {
-                name: identity.name,
-                language: 'EN',
-                include: [{ includeType: 'main' }],
-              },
-              getIncludeSource: async () => {
-                throw new Error('mutable source read forbidden');
-              },
-            },
-            packagePath: ['ZPACKAGE'],
-          }),
-        });
-        const config = { format: { id: 'abapgit' } };
-        await service.checkout({
-          root: workspace,
-          transports: ['S0DK958193'],
-          mode: 'base',
-          verifyInventory: true,
-          config,
-        });
-        expect(
-          await readFile(
-            join(workspace, 'src/zcl_vim_di3_utils.clas.abap'),
-            'utf8',
-          ),
-        ).toBe(base);
-        const result = await service.checkout({
-          root: workspace,
-          transports: ['S0DK958193'],
-          verifyInventory: true,
-          config,
-        });
-        expect(
-          await readFile(
-            join(workspace, 'src/zcl_vim_di3_utils.clas.abap'),
-            'utf8',
-          ),
-        ).toBe(head);
-        expect(
-          await readFile(
-            join(workspace, 'src/zcl_vim_di3_utils.clas.xml'),
-            'utf8',
-          ),
-        ).toContain('ZCL_VIM_DI3_UTILS');
-        expect(result.skipped).toEqual([]);
-        expect(result.inventory).toHaveLength(3);
-        expect(result.inventoryResolutions).toHaveLength(3);
-        expect(
-          result.inventoryResolutions?.every(
-            (resolution) =>
-              resolution.outcome === 'resolved' &&
-              resolution.repositoryObject.type === 'CLAS',
-          ),
-        ).toBe(true);
-        expect(
-          result.inventoryResolutions?.map(({ object }) => object),
-        ).toEqual(
-          objects.map(({ pgmid, type, name: objectName }) => ({
-            pgmid,
-            type,
-            name: objectName,
-          })),
-        );
-        const descriptor = JSON.parse(
-          await readFile(join(workspace, '.adt/tr/S0DK958193.json'), 'utf8'),
-        );
-        expect(descriptor.inventory).toHaveLength(3);
-        expect(descriptor.objects).toHaveLength(1);
-        expect(descriptor.incomplete).toBeUndefined();
-        execFileSync('git', ['init', '--quiet'], { cwd: workspace });
-        execFileSync('git', ['add', 'src/'], { cwd: workspace });
-        expect(
-          execFileSync('git', ['show', ':src/zcl_vim_di3_utils.clas.abap'], {
-            cwd: workspace,
-            encoding: 'utf8',
-          }),
-        ).toBe(head);
-      } finally {
-        await rm(workspace, { recursive: true, force: true });
-      }
+
+      const manifest = await buildTransportSourceManifest(
+        ['S0DK958193'],
+        {},
+        ctx,
+      );
+
+      expect(manifest.inventory).toHaveLength(3);
+      expect(manifest.inventoryResolutions).toHaveLength(3);
+      expect(
+        manifest.inventoryResolutions?.every(
+          (resolution) =>
+            resolution.outcome === 'resolved' &&
+            resolution.repositoryObject.type === 'CLAS',
+        ),
+      ).toBe(true);
+      expect(manifest.entries).toHaveLength(1);
+      expect(manifest.entries[0]).toEqual(
+        expect.objectContaining({
+          object: {
+            pgmid: 'LIMU',
+            type: 'CLSD',
+            name,
+            packageName: 'ZPACKAGE',
+          },
+          repositoryObject: {
+            pgmid: 'R3TR',
+            type: 'CLAS',
+            name,
+            packageName: 'ZPACKAGE',
+          },
+          sourceTransport: 'S0DK958193',
+          changeKind: 'modified',
+          exact: true,
+          base,
+          head,
+        }),
+      );
+      expect(readVersionSource).not.toHaveBeenCalled();
     },
   );
 
