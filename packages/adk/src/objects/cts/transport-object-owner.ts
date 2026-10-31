@@ -62,6 +62,21 @@ function classNameFromUri(uri: string | undefined): string | undefined {
   }
 }
 
+function trimCincOwnerPadding(
+  ownerField: string | undefined,
+): string | undefined {
+  if (ownerField === undefined) return undefined;
+
+  let end = ownerField.length;
+  while (end > 0) {
+    const character = ownerField.charAt(end - 1);
+    if (character !== '=' && character.trim().length > 0) break;
+    end -= 1;
+  }
+
+  return ownerField.slice(0, end);
+}
+
 function classNameFromTransportName(
   name: string | undefined,
   type: string,
@@ -69,7 +84,7 @@ function classNameFromTransportName(
   const ownerField =
     type === 'METH' || type === 'CINC' ? name?.slice(0, 30) : name;
   const normalizedOwnerField =
-    type === 'CINC' ? ownerField?.replace(/[=\s]+$/g, '') : ownerField;
+    type === 'CINC' ? trimCincOwnerPadding(ownerField) : ownerField;
   return normalizeReferenceValue(normalizedOwnerField);
 }
 
