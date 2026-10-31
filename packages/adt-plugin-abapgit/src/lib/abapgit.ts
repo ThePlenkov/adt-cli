@@ -16,7 +16,7 @@ import {
   unlinkSync,
   readdirSync,
 } from 'node:fs';
-import { join, relative, basename } from 'node:path';
+import { join, relative, basename, resolve } from 'node:path';
 
 import {
   type FolderLogic,
@@ -30,8 +30,8 @@ import {
 
 const serializer = new AbapGitSerializer();
 
-// Store folder logic for afterImport hook (set during import, read in afterImport)
-let currentFolderLogic: FolderLogic = 'prefix';
+// Keep each output's folder logic until its afterImport hook runs.
+const folderLogicByTarget = new Map<string, FolderLogic>();
 
 /**
  * Recursively collect all file paths under a directory.
@@ -53,10 +53,9 @@ function walkDir(dir: string, results: string[] = []): string[] {
  * Lazy per-srcDir file index.
  *
  * Maps srcDir → (prefix → [absolute file paths]), where prefix is
- * `${name}.${type}.` in lower-case.  Built at most once per srcDir per
- * process, so the O(repo-size) directory walk is amortised across all
- * `format.delete()` calls in a single import run instead of repeated for
- * every deleted object.
+ * `${name}.${type}.` in lower-case. Reused between plugin writes so a
+ * deletion batch avoids repeating the O(repo-size) directory walk for
+ * every deleted object. Materialization invalidates the affected index.
  */
 const srcDirIndexCache = new Map<string, Map<string, string[]>>();
 
@@ -183,7 +182,7 @@ export const abapGitPlugin: AdtPlugin = createPlugin({
         const folderLogic = resolveFolderLogic(context, targetPath);
 
         // Store for afterImport hook
-        currentFolderLogic = folderLogic;
+        folderLogicByTarget.set(resolve(targetPath), folderLogic);
 
         // Calculate package directory based on folder logic
         const packageDir = calculatePackageDir(packagePath, folderLogic);
@@ -205,6 +204,9 @@ export const abapGitPlugin: AdtPlugin = createPlugin({
           filesCreated: [],
           errors: [error instanceof Error ? error.message : String(error)],
         };
+      } finally {
+        // Serialization can also have written files before reporting an error.
+        srcDirIndexCache.delete(resolve(targetPath, 'src'));
       }
     },
 
@@ -237,7 +239,7 @@ export const abapGitPlugin: AdtPlugin = createPlugin({
       _context: ImportContext,
     ): Promise<DeleteResult> {
       try {
-        const srcDir = join(targetPath, 'src');
+        const srcDir = resolve(targetPath, 'src');
         const matchedFiles = findObjectFiles(
           srcDir,
           objectRef.name,
@@ -266,6 +268,11 @@ export const abapGitPlugin: AdtPlugin = createPlugin({
           }
         }
 
+        srcDirIndexCache.get(srcDir)?.set(
+          `${objectRef.name.toLowerCase()}.${objectRef.type.toLowerCase()}.`,
+          matchedFiles.filter((filePath) => existsSync(filePath)),
+        );
+
         return {
           success: errors.length === 0,
           filesRemoved,
@@ -284,12 +291,19 @@ export const abapGitPlugin: AdtPlugin = createPlugin({
   // Lifecycle hooks
   hooks: {
     async afterImport(targetPath) {
-      // Ensure target directory exists before writing metadata
-      mkdirSync(targetPath, { recursive: true });
-      // Generate .abapgit.xml metadata file after import completes
-      const abapgitXmlPath = join(targetPath, '.abapgit.xml');
-      const abapgitXmlContent = generateAbapGitXml(currentFolderLogic);
-      writeFileSync(abapgitXmlPath, abapgitXmlContent, 'utf-8');
+      const target = resolve(targetPath);
+      const folderLogic =
+        folderLogicByTarget.get(target) ??
+        readFolderLogicFromExistingRepo(targetPath) ??
+        'prefix';
+      try {
+        mkdirSync(targetPath, { recursive: true });
+        const abapgitXmlPath = join(targetPath, '.abapgit.xml');
+        writeFileSync(abapgitXmlPath, generateAbapGitXml(folderLogic), 'utf-8');
+      } finally {
+        folderLogicByTarget.delete(target);
+        srcDirIndexCache.delete(resolve(targetPath, 'src'));
+      }
     },
   },
 });
