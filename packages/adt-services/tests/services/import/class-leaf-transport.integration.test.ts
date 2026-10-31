@@ -675,4 +675,168 @@ describe('legacy ImportService class-component acquisition', () => {
       }
     },
   );
+
+  it.each([
+    {
+      label: 'source 404 after metadata succeeds',
+      errorEndpoint: 'source',
+      status: 404,
+      expectedResults: { success: 0, skipped: 0, failed: 1, deleted: 0 },
+      expectedDeletes: 0,
+      expectedImports: 0,
+      finalFiles: 'preserved',
+    },
+    {
+      label: 'source 403 after metadata succeeds',
+      errorEndpoint: 'source',
+      status: 403,
+      expectedResults: { success: 0, skipped: 0, failed: 1, deleted: 0 },
+      expectedDeletes: 0,
+      expectedImports: 0,
+      finalFiles: 'preserved',
+    },
+    {
+      label: 'source 500 after metadata succeeds',
+      errorEndpoint: 'source',
+      status: 500,
+      expectedResults: { success: 0, skipped: 0, failed: 1, deleted: 0 },
+      expectedDeletes: 0,
+      expectedImports: 0,
+      finalFiles: 'preserved',
+    },
+    {
+      label: 'primary metadata 404 with source 404',
+      errorEndpoint: 'both',
+      status: 404,
+      expectedResults: { success: 0, skipped: 0, failed: 0, deleted: 1 },
+      expectedDeletes: 1,
+      expectedImports: 0,
+      finalFiles: 'deleted',
+    },
+    {
+      label: 'successful source acquisition',
+      errorEndpoint: undefined,
+      status: undefined,
+      expectedResults: { success: 1, skipped: 0, failed: 0, deleted: 0 },
+      expectedDeletes: 0,
+      expectedImports: 1,
+      finalFiles: 'imported',
+    },
+  ] as const)(
+    'handles DDLS $label without confusing a secondary read with object absence',
+    async ({
+      errorEndpoint,
+      status,
+      expectedResults,
+      expectedDeletes,
+      expectedImports,
+      finalFiles,
+    }) => {
+      const objectName = 'ZI_SECONDARY_READ';
+      const sourceText =
+        'define view entity ZI_SECONDARY_READ as select from I_Test { key id }';
+      const error =
+        status === undefined
+          ? undefined
+          : Object.assign(new Error('HTTP ' + status), { status });
+      const metadataGet = vi.fn(async () => {
+        if (errorEndpoint === 'metadata' || errorEndpoint === 'both')
+          throw error;
+        return {
+          ddlSource: {
+            name: objectName,
+            description: 'Secondary source read fixture',
+            masterLanguage: 'EN',
+            abapLanguageVersion: 'standard',
+            packageRef: { name: 'ZPKG' },
+          },
+        };
+      });
+      const sourceGet = vi.fn(async () => {
+        if (errorEndpoint === 'source' || errorEndpoint === 'both') throw error;
+        return sourceText;
+      });
+      const client = {
+        adt: {
+          ddic: {
+            ddl: {
+              sources: {
+                get: metadataGet,
+                source: { main: { get: sourceGet } },
+              },
+            },
+          },
+        },
+      };
+      const object = new AdkTransportObjectRef({ client } as never, {
+        pgmid: 'R3TR',
+        type: 'DDLS',
+        wbtype: 'DDLS',
+        name: objectName,
+        obj_func: '',
+      });
+      mockTransportGet.mockResolvedValue({
+        number: 'S0DK958193',
+        description: 'DDLS secondary source read control',
+        objects: [object],
+      });
+
+      const sourcePath = join(outputPath, 'src', 'zi_secondary_read.ddls.acds');
+      const metadataPath = join(
+        outputPath,
+        'src',
+        'zi_secondary_read.ddls.json',
+      );
+      await mkdir(join(outputPath, 'src'), { recursive: true });
+      await writeFile(sourcePath, 'previous source bytes');
+      await writeFile(metadataPath, 'previous metadata bytes');
+      mockPlugin.instance.format.delete.mockImplementation(
+        (objectRef: unknown, target: string, context: unknown) =>
+          abapGitPlugin.format.delete(
+            objectRef as never,
+            target,
+            context as never,
+          ),
+      );
+
+      const { ImportService } =
+        await import('../../../src/services/import/service');
+      const result = await new ImportService().importTransport({
+        transportNumber: 'S0DK958193',
+        outputPath,
+        format: 'abapgit',
+        removeMissingObjects: true,
+      });
+
+      expect(result.results).toEqual(expectedResults);
+      expect(metadataGet).toHaveBeenCalledTimes(1);
+      expect(sourceGet).toHaveBeenCalledTimes(
+        finalFiles === 'imported' ? 2 : 1,
+      );
+      expect(mockPlugin.instance.format.delete).toHaveBeenCalledTimes(
+        expectedDeletes,
+      );
+      expect(mockPlugin.instance.format.import).toHaveBeenCalledTimes(
+        expectedImports,
+      );
+
+      const sourceBytes = await readFile(sourcePath, 'utf8').catch(
+        () => undefined,
+      );
+      const metadataBytes = await readFile(metadataPath, 'utf8').catch(
+        () => undefined,
+      );
+      if (finalFiles === 'preserved') {
+        expect(sourceBytes).toBe('previous source bytes');
+        expect(metadataBytes).toBe('previous metadata bytes');
+      } else if (finalFiles === 'deleted') {
+        expect(sourceBytes).toBeUndefined();
+        expect(metadataBytes).toBeUndefined();
+      } else {
+        expect(sourceBytes).toBe(sourceText);
+        expect(metadataBytes).toBeTruthy();
+        expect(metadataBytes).not.toBe('previous metadata bytes');
+      }
+    },
+  );
 });
