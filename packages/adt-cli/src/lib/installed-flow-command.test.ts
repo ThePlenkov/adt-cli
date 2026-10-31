@@ -19,7 +19,7 @@ const cliPackageRoot = resolve(
   '../..',
 );
 describe('installed ADT CLI package', () => {
-  it('loads the configured flow command from the CLI production dependency layout', () => {
+  it('declares and loads the configured flow command as a CLI runtime dependency', () => {
     const installRoot = join(
       tmpdir(),
       `adt-cli-flow-install-${process.pid}-${Date.now()}`,
@@ -31,6 +31,7 @@ describe('installed ADT CLI package', () => {
       const cliManifest = JSON.parse(
         readFileSync(join(cliPackageRoot, 'package.json'), 'utf8'),
       ) as { dependencies: Record<string, string> };
+      expect(cliManifest.dependencies['@abapify/adt-flow']).toBeTruthy();
 
       mkdirSync(cliInstallRoot, { recursive: true });
       cpSync(join(cliPackageRoot, 'dist'), join(cliInstallRoot, 'dist'), {
@@ -41,9 +42,9 @@ describe('installed ADT CLI package', () => {
         join(cliInstallRoot, 'package.json'),
       );
 
-      // Stage only the CLI's declared runtime dependencies. This mirrors a
-      // production install and prevents unrelated workspace hoisting from
-      // making an undeclared plugin appear resolvable.
+      // Stage the CLI's direct runtime dependencies for the registration smoke.
+      // Their transitive dependencies retain the workspace's normal resolution.
+      // The manifest assertion above prevents hoisting from hiding this edge.
       for (const dependency of Object.keys(cliManifest.dependencies)) {
         const workspaceDependency = join(
           cliPackageRoot,
@@ -58,7 +59,7 @@ describe('installed ADT CLI package', () => {
         symlinkSync(
           realpathSync(workspaceDependency),
           installedDependency,
-          'dir',
+          'junction',
         );
       }
 
@@ -77,7 +78,7 @@ describe('installed ADT CLI package', () => {
 
       expect(result.error).toBeUndefined();
       expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
-      expect(result.stdout).toContain('--partial');
+      expect(result.stdout).toMatch(/(?:^|[\s,])--partial(?=[\s,]|$)/m);
       expect(result.stdout).toContain('--report <file>');
     } finally {
       rmSync(installRoot, { recursive: true, force: true });

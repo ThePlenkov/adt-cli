@@ -60,8 +60,9 @@ ENV PATH="/app/node_modules/.bin:$PATH"
 RUN smoke_dir="$(mktemp -d)" \
  && trap 'rm -rf "$smoke_dir"' EXIT \
  && printf '%s\n' 'export default { commands: ["@abapify/adt-flow/commands/flow"] };' > "$smoke_dir/adt.config.mjs" \
+ && ADT_FLOW_SMOKE_CLI="$(command -v adt)" node -e "const load = require(\"node:module\").createRequire(require(\"node:fs\").realpathSync(process.env.ADT_FLOW_SMOKE_CLI)); if (!load(\"@abapify/adt-cli/package.json\").dependencies?.[\"@abapify/adt-flow\"]) throw new Error(\"CLI does not declare its flow runtime dependency\");" \
  && adt --config "$smoke_dir/adt.config.mjs" flow checkout tr --help > "$smoke_dir/flow-help.txt" \
- && grep -q -- '--partial' "$smoke_dir/flow-help.txt" \
+ && grep -Eq -- '(^|[[:space:],])--partial([[:space:],]|$)' "$smoke_dir/flow-help.txt" \
  && grep -q -- '--report <file>' "$smoke_dir/flow-help.txt"
 
 # Default: show adt help (GitLab CI overrides entrypoint anyway)
