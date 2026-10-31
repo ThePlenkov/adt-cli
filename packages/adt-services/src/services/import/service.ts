@@ -7,6 +7,7 @@ import type {
   FormatOptionValue,
 } from '@abapify/adt-plugin';
 import {
+  AdkGenericObject,
   AdkPackage,
   AdkTransport,
   MergedTransportView,
@@ -548,6 +549,18 @@ export class ImportService {
                 );
               }
             }
+            return;
+          }
+
+          // An unloaded generic fallback proves neither acquisition nor absence.
+          // Count it as failed and never serialize its default-only fields.
+          if (adkObject instanceof AdkGenericObject && !adkObject.isLoaded) {
+            results.failed += batchObjects.length;
+            batchObjects.forEach((object) =>
+              console.log(
+                `  ❌ ${object.type} ${object.name}: ADK returned an unloaded generic object`,
+              ),
+            );
             return;
           }
 
