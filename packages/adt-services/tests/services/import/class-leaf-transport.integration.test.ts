@@ -371,76 +371,99 @@ describe('legacy ImportService class-component acquisition', () => {
     expect(await readFile(staleIncludeFile, 'utf8')).toBe('stale include');
   });
 
-  it('keeps HTTP 404 class-owner reads on the true-not-found cleanup path', async () => {
-    const className = 'ZCL_NOT_FOUND';
-    const classGet = vi.fn(async () => {
-      throw Object.assign(new Error('HTTP 404: Not Found'), { status: 404 });
-    });
-    const client = {
-      adt: { oo: { classes: { get: classGet } } },
-    };
-    const objects = [
-      { pgmid: 'R3TR', type: 'CLAS', wbtype: 'CLAS', name: className },
-      { pgmid: 'LIMU', type: 'CPRI', wbtype: 'CLAS/OSI', name: className },
-      {
-        pgmid: 'LIMU',
-        type: 'CINC',
-        wbtype: 'CLAS/OCN',
-        name: `${className.padEnd(30)}CCIMP`,
-      },
-    ].map(
-      (object) =>
-        new AdkTransportObjectRef({ client } as never, {
-          obj_func: '',
-          ...object,
-        }),
-    );
-    mockTransportGet.mockResolvedValue({
-      number: 'S0DK958193',
-      description: 'S0D class parent scope',
-      objects,
-    });
-    mockPlugin.instance.format.delete.mockResolvedValue({
-      success: true,
-      filesRemoved: ['src/zcl_not_found.clas.locals_imp.abap'],
-    });
+  it.each([
+    { label: 'direct leaves only', includeOwner: false, wrapped: false },
+    { label: 'direct explicit owner', includeOwner: true, wrapped: false },
+    { label: 'wrapped leaves only', includeOwner: false, wrapped: true },
+  ])(
+    'deletes canonical class files once for $label after metadata 404',
+    async ({ includeOwner, wrapped }) => {
+      const className = 'ZCL_NOT_FOUND';
+      const classGet = vi.fn(async () => {
+        throw Object.assign(
+          new Error('HTTP 404: Not Found'),
+          wrapped ? { response: { status: 404 } } : { status: 404 },
+        );
+      });
+      const client = { adt: { oo: { classes: { get: classGet } } } };
+      const objects = [
+        ...(includeOwner
+          ? [{ pgmid: 'R3TR', type: 'CLAS', wbtype: 'CLAS', name: className }]
+          : []),
+        { pgmid: 'LIMU', type: 'CPRI', wbtype: 'CLAS/OSI', name: className },
+        {
+          pgmid: 'LIMU',
+          type: 'CINC',
+          wbtype: 'CLAS/OCN',
+          name: `${className.padEnd(30, '=')}CCIMP`,
+        },
+      ].map(
+        (object) =>
+          new AdkTransportObjectRef({ client } as never, {
+            obj_func: '',
+            ...object,
+          }),
+      );
+      mockTransportGet.mockResolvedValue({
+        number: 'S0DK958193',
+        description: 'S0D class parent scope',
+        objects,
+      });
+      const classFile = join(outputPath, 'src/zcl_not_found.clas.abap');
+      const includeFile = join(
+        outputPath,
+        'src/zcl_not_found.clas.locals_imp.abap',
+      );
+      const unrelated = join(outputPath, 'src/zcl_other.clas.abap');
+      await mkdir(join(outputPath, 'src'), { recursive: true });
+      await writeFile(classFile, 'stale class');
+      await writeFile(includeFile, 'stale include');
+      await writeFile(unrelated, 'unrelated class');
+      mockPlugin.instance.format.delete.mockImplementation(
+        (object: unknown, target: string, context: unknown) =>
+          abapGitPlugin.format.delete(
+            object as never,
+            target,
+            context as never,
+          ),
+      );
+      const { ImportService } =
+        await import('../../../src/services/import/service');
+      const result = await new ImportService().importTransport({
+        transportNumber: 'S0DK958193',
+        outputPath,
+        format: 'abapgit',
+        removeMissingObjects: true,
+      });
+      expect(classGet).toHaveBeenCalledTimes(1);
+      expect(mockPlugin.instance.format.delete).toHaveBeenCalledTimes(1);
+      expect(mockPlugin.instance.format.delete).toHaveBeenCalledWith(
+        { pgmid: 'R3TR', type: 'CLAS', name: className },
+        outputPath,
+        expect.any(Object),
+      );
+      expect(mockPlugin.instance.format.import).not.toHaveBeenCalled();
+      expect(result.results).toEqual({
+        success: 0,
+        skipped: 0,
+        failed: 0,
+        deleted: objects.length,
+      });
+      expect(result.filesRemoved?.sort()).toEqual([
+        'src/zcl_not_found.clas.abap',
+        'src/zcl_not_found.clas.locals_imp.abap',
+      ]);
+      await expect(readFile(classFile, 'utf8')).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+      await expect(readFile(includeFile, 'utf8')).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+      expect(await readFile(unrelated, 'utf8')).toBe('unrelated class');
+    },
+  );
 
-    const { ImportService } =
-      await import('../../../src/services/import/service');
-    const result = await new ImportService().importTransport({
-      transportNumber: 'S0DK958193',
-      outputPath,
-      format: 'abapgit',
-      removeMissingObjects: true,
-    });
-
-    expect(classGet).toHaveBeenCalledTimes(1);
-    expect(mockPlugin.instance.format.delete).toHaveBeenCalledTimes(2);
-    expect(mockPlugin.instance.format.delete).toHaveBeenNthCalledWith(
-      1,
-      { pgmid: 'LIMU', type: 'CPRI', name: className },
-      outputPath,
-      expect.any(Object),
-    );
-    expect(mockPlugin.instance.format.delete).toHaveBeenNthCalledWith(
-      2,
-      {
-        pgmid: 'LIMU',
-        type: 'CINC',
-        name: `${className.padEnd(30)}CCIMP`,
-      },
-      outputPath,
-      expect.any(Object),
-    );
-    expect(result.results).toEqual({
-      success: 0,
-      skipped: 1,
-      failed: 0,
-      deleted: 2,
-    });
-  });
-
-  it('continues leaf cleanup when delete throws synchronously or rejects', async () => {
+  it('continues canonical cleanup across owners when delete throws or rejects', async () => {
     const className = 'ZCL_DELETE_ERRORS';
     const classGet = vi.fn(async () => {
       throw Object.assign(new Error('HTTP 404: Not Found'), {
@@ -451,8 +474,8 @@ describe('legacy ImportService class-component acquisition', () => {
       adt: { oo: { classes: { get: classGet } } },
     };
     const objects = [
-      { type: 'CLSD', name: className },
-      { type: 'METH', name: `${className.padEnd(30)}MISSING_METHOD` },
+      { type: 'CLSD', name: `${className}_A` },
+      { type: 'METH', name: `${`${className}_B`.padEnd(30)}MISSING_METHOD` },
     ].map(
       (object) =>
         new AdkTransportObjectRef({ client } as never, {
@@ -484,8 +507,16 @@ describe('legacy ImportService class-component acquisition', () => {
       removeMissingObjects: true,
     });
 
-    expect(classGet).toHaveBeenCalledTimes(1);
+    expect(classGet).toHaveBeenCalledTimes(2);
     expect(mockPlugin.instance.format.delete).toHaveBeenCalledTimes(2);
+    expect(
+      mockPlugin.instance.format.delete.mock.calls.map(([object]) => object),
+    ).toEqual(
+      expect.arrayContaining([
+        { pgmid: 'R3TR', type: 'CLAS', name: `${className}_A` },
+        { pgmid: 'R3TR', type: 'CLAS', name: `${className}_B` },
+      ]),
+    );
     expect(result.results).toEqual({
       success: 0,
       skipped: 2,

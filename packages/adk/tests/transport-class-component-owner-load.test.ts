@@ -104,20 +104,47 @@ describe('AdkTransportObjectRef class-component loading', () => {
     },
   );
 
-  it('returns undefined for a class owner that ADT confirms is not found', async () => {
-    const error = Object.assign(new Error('HTTP 404: Not Found'), {
-      status: 404,
-    });
-    factoryGet.mockReturnValue({ load: vi.fn().mockRejectedValue(error) });
-    const object = new AdkTransportObjectRef({} as any, {
-      pgmid: 'LIMU',
-      type: 'CINC',
-      wbtype: 'CLAS/OCN',
-      name: `${'ZCL_VIM_DI3_UTILS'.padEnd(30)}CCIMP`,
-    });
+  it.each([
+    { label: 'direct', details: { status: 404 } },
+    { label: 'wrapped', details: { response: { status: 404 } } },
+  ])(
+    'returns undefined for a $label confirmed class-owner 404',
+    async ({ details }) => {
+      const error = Object.assign(new Error('HTTP 404: Not Found'), {
+        ...details,
+      });
+      factoryGet.mockReturnValue({ load: vi.fn().mockRejectedValue(error) });
+      const object = new AdkTransportObjectRef({} as any, {
+        pgmid: 'LIMU',
+        type: 'CINC',
+        wbtype: 'CLAS/OCN',
+        name: `${'ZCL_VIM_DI3_UTILS'.padEnd(30)}CCIMP`,
+      });
 
-    await expect(object.load()).resolves.toBeUndefined();
-  });
+      await expect(object.load()).resolves.toBeUndefined();
+    },
+  );
+
+  it.each([
+    { label: 'wrapped 503', details: { response: { status: 503 } } },
+    {
+      label: 'conflicting status',
+      details: { status: 503, response: { status: 404 } },
+    },
+  ])(
+    'propagates $label instead of treating it as absence',
+    async ({ details }) => {
+      const error = Object.assign(new Error('service unavailable'), details);
+      factoryGet.mockReturnValue({ load: vi.fn().mockRejectedValue(error) });
+      const object = new AdkTransportObjectRef({} as any, {
+        pgmid: 'LIMU',
+        type: 'CINC',
+        wbtype: 'CLAS/OCN',
+        name: 'ZCL_VIM_DI3_WF_BO=============CCIMP',
+      });
+      await expect(object.load()).rejects.toBe(error);
+    },
+  );
 
   it('returns generic objects unchanged for unsupported types without a load method', async () => {
     const genericObject = { name: 'ZUNKNOWN', type: 'ZUNKNOWN' };

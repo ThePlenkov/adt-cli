@@ -114,11 +114,14 @@ async function cleanupMissingObjectBatch({
   // AdkTransportObjectRef.load() maps confirmed HTTP 404 responses to undefined.
   // Transient read errors propagate so ImportService records a failed acquisition.
   const deleteObjects = batch.classOwnerName
-    ? batch.objects.filter((object) => !isRepositoryClassOwner(object))
+    ? [{ pgmid: 'R3TR', type: 'CLAS', name: batch.classOwnerName }]
     : [fallbackObject];
+  const representedObjectCount = batch.classOwnerName
+    ? batch.objects.length
+    : 1;
   const result: MissingObjectCleanupResult = {
     deleted: 0,
-    skipped: batch.objects.length - deleteObjects.length,
+    skipped: 0,
     filesRemoved: [],
   };
 
@@ -129,7 +132,7 @@ async function cleanupMissingObjectBatch({
       name: deleteObject.name,
     };
     const deleteReason = batch.classOwnerName
-      ? 'class owner could not be loaded; checking leaf files only'
+      ? 'class owner metadata confirmed not found in SAP'
       : 'not found in SAP';
     console.log(
       `  🗑️  [${firstProgress}/${total}] ${deleteRef.type} ${deleteRef.name}: ${deleteReason}`,
@@ -149,11 +152,11 @@ async function cleanupMissingObjectBatch({
       !delResult?.success ||
       (batch.classOwnerName && delResult.filesRemoved.length === 0)
     ) {
-      result.skipped++;
+      result.skipped += representedObjectCount;
       continue;
     }
 
-    result.deleted++;
+    result.deleted += representedObjectCount;
     result.filesRemoved.push(...delResult.filesRemoved);
   }
 
@@ -237,9 +240,10 @@ export interface TransportImportOptions {
    */
   saveTrMetadata?: boolean;
   /**
-   * When true, objects that are in the TR list but cannot be fetched from SAP
-   * (i.e., `objRef.load()` returns null — the object no longer exists in the system)
-   * are treated as deletions: `format.delete()` is called to remove their local files.
+   * When true, confirmed HTTP 404/not-found objects (`objRef.load()` returns
+   * undefined) are eligible for local cleanup via `format.delete()`.
+   * Class-component metadata 404s remove the canonical CLAS files once per
+   * owner. Other read errors are recorded as failures and never trigger cleanup.
    *
    * This catches the "orphan sync" case where an object was removed in SAP without
    * an explicit `obj_func=D` entry in the transport.
