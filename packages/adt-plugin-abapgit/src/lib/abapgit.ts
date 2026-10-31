@@ -16,7 +16,7 @@ import {
   unlinkSync,
   readdirSync,
 } from 'node:fs';
-import { join, relative, basename, resolve } from 'node:path';
+import { join, relative, basename, resolve, sep, isAbsolute } from 'node:path';
 
 import {
   type FolderLogic,
@@ -49,13 +49,23 @@ function walkDir(dir: string, results: string[] = []): string[] {
   return results;
 }
 
+function getObjectFilePrefix(filePath: string): string | undefined {
+  const fname = basename(filePath).toLowerCase();
+  const first = fname.indexOf('.');
+  if (first === -1) return undefined;
+  const second = fname.indexOf('.', first + 1);
+  if (second === -1) return undefined;
+  return fname.substring(0, second + 1);
+}
+
 /**
  * Lazy per-srcDir file index.
  *
  * Maps srcDir → (prefix → [absolute file paths]), where prefix is
  * `${name}.${type}.` in lower-case. Reused between plugin writes so a
  * deletion batch avoids repeating the O(repo-size) directory walk for
- * every deleted object. Materialization invalidates the affected index.
+ * every deleted object. Successful writes update a built index; failures
+ * invalidate it because serialization may have left partial files.
  */
 const srcDirIndexCache = new Map<string, Map<string, string[]>>();
 
@@ -65,13 +75,8 @@ function getOrBuildSrcIndex(srcDir: string): Map<string, string[]> {
 
   const index = new Map<string, string[]>();
   for (const filePath of walkDir(srcDir)) {
-    const fname = basename(filePath).toLowerCase();
-    // Extract the "<name>.<type>." prefix (first two dot-segments + trailing dot)
-    const first = fname.indexOf('.');
-    if (first === -1) continue;
-    const second = fname.indexOf('.', first + 1);
-    if (second === -1) continue;
-    const key = fname.substring(0, second + 1); // e.g. "zcl_foo.clas."
+    const key = getObjectFilePrefix(filePath);
+    if (!key) continue;
     const bucket = index.get(key);
     if (bucket) {
       bucket.push(filePath);
@@ -81,6 +86,37 @@ function getOrBuildSrcIndex(srcDir: string): Map<string, string[]> {
   }
   srcDirIndexCache.set(srcDir, index);
   return index;
+}
+
+function addFilesToBuiltSrcIndex(srcDir: string, files: string[]): void {
+  const index = srcDirIndexCache.get(srcDir);
+  if (!index) return;
+
+  for (const filePath of files) {
+    const absolutePath = resolve(filePath);
+    const pathFromSrc = relative(srcDir, absolutePath);
+    if (
+      !pathFromSrc ||
+      isAbsolute(pathFromSrc) ||
+      pathFromSrc === '..' ||
+      pathFromSrc.startsWith(`..${sep}`)
+    ) {
+      // A successful serializer should only write below src. If it returns an
+      // unexpected path, discard the cache so the next lookup rebuilds safely.
+      srcDirIndexCache.delete(srcDir);
+      return;
+    }
+
+    const key = getObjectFilePrefix(absolutePath);
+    if (!key) continue;
+
+    const bucket = index.get(key);
+    if (bucket) {
+      if (!bucket.includes(absolutePath)) bucket.push(absolutePath);
+    } else {
+      index.set(key, [absolutePath]);
+    }
+  }
 }
 
 /**
@@ -162,6 +198,7 @@ export const abapGitPlugin: AdtPlugin = createPlugin({
   // Format service
   format: {
     async import(object, targetPath, context) {
+      let serializationCompleted = false;
       try {
         // Get the object's package - for DEVC objects, use name; for others, use package property
         // Note: object.type might be 'DEVC/K' not just 'DEVC'
@@ -193,6 +230,8 @@ export const abapGitPlugin: AdtPlugin = createPlugin({
           targetPath,
           packageDir,
         );
+        addFilesToBuiltSrcIndex(resolve(targetPath, 'src'), files);
+        serializationCompleted = true;
 
         return {
           success: true,
@@ -205,8 +244,10 @@ export const abapGitPlugin: AdtPlugin = createPlugin({
           errors: [error instanceof Error ? error.message : String(error)],
         };
       } finally {
-        // Serialization can also have written files before reporting an error.
-        srcDirIndexCache.delete(resolve(targetPath, 'src'));
+        if (!serializationCompleted) {
+          // Serialization can write some files before reporting an error.
+          srcDirIndexCache.delete(resolve(targetPath, 'src'));
+        }
       }
     },
 
