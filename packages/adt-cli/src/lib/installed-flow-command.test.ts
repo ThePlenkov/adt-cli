@@ -31,7 +31,15 @@ describe('installed ADT CLI package', () => {
       const cliManifest = JSON.parse(
         readFileSync(join(cliPackageRoot, 'package.json'), 'utf8'),
       ) as { dependencies: Record<string, string> };
-      expect(cliManifest.dependencies['@abapify/adt-flow']).toBeTruthy();
+      const flowManifest = JSON.parse(
+        readFileSync(
+          join(cliPackageRoot, 'node_modules/@abapify/adt-flow/package.json'),
+          'utf8',
+        ),
+      ) as { version: string };
+      expect(cliManifest.dependencies['@abapify/adt-flow']).toBe(
+        flowManifest.version,
+      );
 
       mkdirSync(cliInstallRoot, { recursive: true });
       cpSync(join(cliPackageRoot, 'dist'), join(cliInstallRoot, 'dist'), {
