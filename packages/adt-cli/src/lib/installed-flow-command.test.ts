@@ -72,7 +72,7 @@ describe('installed ADT CLI package', () => {
       const result = spawnSync(
         process.execPath,
         [cliPath, '--config', configPath, 'flow', 'checkout', 'tr', '--help'],
-        { cwd: installRoot, encoding: 'utf8' },
+        { cwd: installRoot, encoding: 'utf8', timeout: 30_000 },
       );
 
       expect(result.error).toBeUndefined();
