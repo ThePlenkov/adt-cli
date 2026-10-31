@@ -30,13 +30,7 @@
       },
       "outputs": ["{projectRoot}/dist/adt"],
       "cache": true,
-      "inputs": [
-        "{projectRoot}/src/**/*.ts",
-        "{workspaceRoot}/packages/adt-atc/src/**/*.ts",
-        "{workspaceRoot}/packages/adt-export/src/**/*.ts",
-        "{workspaceRoot}/packages/adt-codegen/src/**/*.ts",
-        "{workspaceRoot}/packages/adt-flow/src/**/*.ts"
-      ],
+      "inputs": ["default", "^production", "{workspaceRoot}/bun.lock"],
       "dependsOn": ["^build"]
     }
   }
