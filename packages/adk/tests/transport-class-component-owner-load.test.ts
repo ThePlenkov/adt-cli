@@ -56,6 +56,7 @@ describe('AdkTransportObjectRef class-component loading', () => {
       await object.load();
 
       expect(factoryGet).toHaveBeenCalledWith(owner, 'CLAS');
+      expect(factoryGet.mock.results[0]?.value.load).toHaveBeenCalledTimes(1);
     },
   );
 });
