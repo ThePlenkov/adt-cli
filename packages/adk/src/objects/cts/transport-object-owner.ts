@@ -10,6 +10,8 @@ const CLASS_COMPONENT_WBTYPES: Record<string, string> = {
   CLSD: 'CLAS/OC',
   CPUB: 'CLAS/OSU',
   METH: 'CLAS/OM',
+  CPRI: 'CLAS/OSI',
+  CINC: 'CLAS/OCN',
 };
 
 interface ClassComponentType {
@@ -64,8 +66,11 @@ function classNameFromTransportName(
   name: string | undefined,
   type: string,
 ): string | undefined {
-  const ownerField = type === 'METH' ? name?.slice(0, 30) : name;
-  return normalizeReferenceValue(ownerField);
+  const ownerField =
+    type === 'METH' || type === 'CINC' ? name?.slice(0, 30) : name;
+  const normalizedOwnerField =
+    type === 'CINC' ? ownerField?.replace(/[=\s]+$/g, '') : ownerField;
+  return normalizeReferenceValue(normalizedOwnerField);
 }
 
 /** Resolve a LIMU class component to the complete CLAS repository owner. */
