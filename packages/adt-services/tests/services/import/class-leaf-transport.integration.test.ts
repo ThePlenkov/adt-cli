@@ -371,6 +371,81 @@ describe('legacy ImportService class-component acquisition', () => {
     expect(await readFile(staleIncludeFile, 'utf8')).toBe('stale include');
   });
 
+  it('preserves an existing class when an include read returns 404 after owner metadata succeeds', async () => {
+    const className = 'ZCL_EXISTING_OWNER';
+    const classGet = vi.fn(async () => ({
+      abapClass: {
+        name: className,
+        language: 'EN',
+        include: [{ includeType: 'main' }, { includeType: 'implementations' }],
+      },
+    }));
+    const includeGet = vi.fn(async () => {
+      throw Object.assign(new Error('include not found'), { status: 404 });
+    });
+    const client = {
+      adt: {
+        oo: {
+          classes: {
+            get: classGet,
+            source: {
+              main: {
+                get: async () =>
+                  'CLASS zcl_existing_owner DEFINITION PUBLIC. ENDCLASS.',
+              },
+            },
+            includes: { get: includeGet },
+          },
+        },
+      },
+    };
+    const objects = [
+      { type: 'CPRI', name: className },
+      { type: 'CINC', name: `${className.padEnd(30, '=')}CCIMP` },
+    ].map(
+      (object) =>
+        new AdkTransportObjectRef({ client } as never, {
+          pgmid: 'LIMU',
+          wbtype: 'CLAS',
+          obj_func: '',
+          ...object,
+        }),
+    );
+    mockTransportGet.mockResolvedValue({
+      number: 'S0DK958193',
+      description: 'existing class',
+      objects,
+    });
+    const main = join(outputPath, 'src/zcl_existing_owner.clas.abap');
+    const include = join(
+      outputPath,
+      'src/zcl_existing_owner.clas.locals_imp.abap',
+    );
+    await mkdir(join(outputPath, 'src'), { recursive: true });
+    await writeFile(main, 'old main');
+    await writeFile(include, 'old include');
+    const { ImportService } =
+      await import('../../../src/services/import/service');
+    const result = await new ImportService().importTransport({
+      transportNumber: 'S0DK958193',
+      outputPath,
+      format: 'abapgit',
+      removeMissingObjects: true,
+    });
+    expect(classGet).toHaveBeenCalledTimes(1);
+    expect(includeGet).toHaveBeenCalledTimes(1);
+    expect(mockPlugin.instance.format.delete).not.toHaveBeenCalled();
+    expect(result.results).toEqual({
+      success: 0,
+      skipped: 0,
+      failed: 2,
+      deleted: 0,
+    });
+    expect(result.filesRemoved).toBeUndefined();
+    expect(await readFile(main, 'utf8')).toBe('old main');
+    expect(await readFile(include, 'utf8')).toBe('old include');
+  });
+
   it.each([
     { label: 'direct leaves only', includeOwner: false, wrapped: false },
     { label: 'direct explicit owner', includeOwner: true, wrapped: false },
