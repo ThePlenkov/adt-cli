@@ -111,8 +111,8 @@ async function cleanupMissingObjectBatch({
   total,
   debug,
 }: MissingObjectCleanupContext): Promise<MissingObjectCleanupResult> {
-  // AdkTransportObjectRef.load() maps transient errors and absence to undefined.
-  // Undefined therefore cannot authorize deleting a complete class owner.
+  // AdkTransportObjectRef.load() maps confirmed HTTP 404 responses to undefined.
+  // Transient read errors propagate so ImportService records a failed acquisition.
   const deleteObjects = batch.classOwnerName
     ? batch.objects.filter((object) => !isRepositoryClassOwner(object))
     : [fallbackObject];

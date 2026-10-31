@@ -299,24 +299,36 @@ describe('legacy ImportService class-component acquisition', () => {
     ).toBe(implementationsSource);
   });
 
-  it('preserves materialized CLAS files when the owner read fails with HTTP 503', async () => {
+  it('reports transient CLAS read failures for explicit owners and CPRI/CINC leaves', async () => {
     const className = 'ZCL_MISSING';
     const classGet = vi.fn(async () => {
-      throw Object.assign(new Error('service unavailable'), {
-        response: { status: 503 },
+      throw Object.assign(new Error('HTTP 503: Service Unavailable'), {
+        status: 503,
       });
     });
     const client = {
       adt: { oo: { classes: { get: classGet } } },
     };
     const objects = [
-      { type: 'CLSD', name: className },
-      { type: 'METH', name: `${className.padEnd(30)}MISSING_METHOD` },
+      { pgmid: 'R3TR', type: 'CLAS', wbtype: 'CLAS', name: className },
+      { pgmid: 'LIMU', type: 'CPRI', wbtype: 'CLAS/OSI', name: className },
+      {
+        pgmid: 'LIMU',
+        type: 'CINC',
+        wbtype: 'CLAS/OCN',
+        name: `${className.padEnd(30)}CCIMP`,
+      },
+      { pgmid: 'LIMU', type: 'CLSD', wbtype: 'CLAS/OC', name: className },
+      {
+        pgmid: 'LIMU',
+        type: 'METH',
+        wbtype: 'CLAS/OM',
+        name: `${className.padEnd(30)}MISSING_METHOD`,
+      },
     ].map(
       (object) =>
         new AdkTransportObjectRef({ client } as never, {
           pgmid: 'LIMU',
-          wbtype: 'CLAS',
           obj_func: '',
           ...object,
         }),
@@ -328,12 +340,70 @@ describe('legacy ImportService class-component acquisition', () => {
     });
 
     const staleClassFile = join(outputPath, 'src/zcl_missing.clas.abap');
+    const staleIncludeFile = join(
+      outputPath,
+      'src/zcl_missing.clas.locals_imp.abap',
+    );
     await mkdir(join(outputPath, 'src'), { recursive: true });
     await writeFile(staleClassFile, 'stale source');
-    mockPlugin.instance.format.delete.mockImplementation(
-      (object: unknown, target: string, context: unknown) =>
-        abapGitPlugin.format.delete(object as never, target, context as never),
+    await writeFile(staleIncludeFile, 'stale include');
+
+    const { ImportService } =
+      await import('../../../src/services/import/service');
+    const result = await new ImportService().importTransport({
+      transportNumber: 'S0DK958193',
+      outputPath,
+      format: 'abapgit',
+      removeMissingObjects: true,
+    });
+
+    expect(classGet).toHaveBeenCalledTimes(1);
+    expect(mockPlugin.instance.format.delete).not.toHaveBeenCalled();
+    expect(mockPlugin.instance.format.import).not.toHaveBeenCalled();
+    expect(result.results).toEqual({
+      success: 0,
+      skipped: 0,
+      failed: 5,
+      deleted: 0,
+    });
+    expect(result.filesRemoved).toBeUndefined();
+    expect(await readFile(staleClassFile, 'utf8')).toBe('stale source');
+    expect(await readFile(staleIncludeFile, 'utf8')).toBe('stale include');
+  });
+
+  it('keeps HTTP 404 class-owner reads on the true-not-found cleanup path', async () => {
+    const className = 'ZCL_NOT_FOUND';
+    const classGet = vi.fn(async () => {
+      throw Object.assign(new Error('HTTP 404: Not Found'), { status: 404 });
+    });
+    const client = {
+      adt: { oo: { classes: { get: classGet } } },
+    };
+    const objects = [
+      { pgmid: 'R3TR', type: 'CLAS', wbtype: 'CLAS', name: className },
+      { pgmid: 'LIMU', type: 'CPRI', wbtype: 'CLAS/OSI', name: className },
+      {
+        pgmid: 'LIMU',
+        type: 'CINC',
+        wbtype: 'CLAS/OCN',
+        name: `${className.padEnd(30)}CCIMP`,
+      },
+    ].map(
+      (object) =>
+        new AdkTransportObjectRef({ client } as never, {
+          obj_func: '',
+          ...object,
+        }),
     );
+    mockTransportGet.mockResolvedValue({
+      number: 'S0DK958193',
+      description: 'S0D class parent scope',
+      objects,
+    });
+    mockPlugin.instance.format.delete.mockResolvedValue({
+      success: true,
+      filesRemoved: ['src/zcl_not_found.clas.locals_imp.abap'],
+    });
 
     const { ImportService } =
       await import('../../../src/services/import/service');
@@ -348,7 +418,7 @@ describe('legacy ImportService class-component acquisition', () => {
     expect(mockPlugin.instance.format.delete).toHaveBeenCalledTimes(2);
     expect(mockPlugin.instance.format.delete).toHaveBeenNthCalledWith(
       1,
-      { pgmid: 'LIMU', type: 'CLSD', name: className },
+      { pgmid: 'LIMU', type: 'CPRI', name: className },
       outputPath,
       expect.any(Object),
     );
@@ -356,27 +426,25 @@ describe('legacy ImportService class-component acquisition', () => {
       2,
       {
         pgmid: 'LIMU',
-        type: 'METH',
-        name: `${className.padEnd(30)}MISSING_METHOD`,
+        type: 'CINC',
+        name: `${className.padEnd(30)}CCIMP`,
       },
       outputPath,
       expect.any(Object),
     );
     expect(result.results).toEqual({
       success: 0,
-      skipped: 2,
+      skipped: 1,
       failed: 0,
-      deleted: 0,
+      deleted: 2,
     });
-    expect(result.filesRemoved).toBeUndefined();
-    expect(await readFile(staleClassFile, 'utf8')).toBe('stale source');
   });
 
   it('continues leaf cleanup when delete throws synchronously or rejects', async () => {
     const className = 'ZCL_DELETE_ERRORS';
     const classGet = vi.fn(async () => {
-      throw Object.assign(new Error('service unavailable'), {
-        response: { status: 503 },
+      throw Object.assign(new Error('HTTP 404: Not Found'), {
+        status: 404,
       });
     });
     const client = {

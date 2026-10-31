@@ -19,6 +19,15 @@ import { resolveClassComponentOwnerName } from './transport-object-owner';
 import type { TransportGetResponse } from '../../base/adt';
 import type { TransportData } from './transport/transport.types';
 
+function isNotFoundError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    error.status === 404
+  );
+}
+
 // Types from the transport schema
 // These match the structure in transportmanagment-single.types.ts
 interface TransportObjectData {
@@ -183,7 +192,7 @@ export class AdkTransportObjectRef {
    * Uses the ADK factory to create the appropriate object type
    * (AdkClass, AdkInterface, AdkPackage, etc.)
    *
-   * @returns The loaded ADK object, or undefined if type not supported
+   * @returns The loaded ADK object, or undefined if the object is not found
    */
   async load(): Promise<unknown> {
     // Import dynamically to avoid circular dependency
@@ -211,9 +220,10 @@ export class AdkTransportObjectRef {
         await obj.load();
       }
       return obj;
-    } catch {
-      // Type not supported or object not found
-      return undefined;
+    } catch (error) {
+      // Unsupported types use AdkGenericObject; only an explicit 404 proves absence.
+      if (isNotFoundError(error)) return undefined;
+      throw error;
     }
   }
 
