@@ -40,6 +40,7 @@ type MissingObjectDelete = (
 interface MissingObjectCleanupResult {
   deleted: number;
   skipped: number;
+  failed: number;
   filesRemoved: string[];
 }
 
@@ -122,6 +123,7 @@ async function cleanupMissingObjectBatch({
   const result: MissingObjectCleanupResult = {
     deleted: 0,
     skipped: 0,
+    failed: 0,
     filesRemoved: [],
   };
 
@@ -141,23 +143,28 @@ async function cleanupMissingObjectBatch({
     try {
       delResult = await deleteFn(deleteRef, outputPath, importContext);
     } catch (error: unknown) {
+      result.failed += representedObjectCount;
+      console.log(`  ❌ ${deleteRef.type} ${deleteRef.name}: cleanup failed`);
       if (debug) {
         console.log(
           `  ⚠️  ${deleteRef.type} ${deleteRef.name}: delete failed — ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+      continue;
     }
 
-    if (
-      !delResult?.success ||
-      (batch.classOwnerName && delResult.filesRemoved.length === 0)
-    ) {
+    result.filesRemoved.push(...(delResult?.filesRemoved ?? []));
+    if (!delResult?.success) {
+      result.failed += representedObjectCount;
+      console.log(`  ❌ ${deleteRef.type} ${deleteRef.name}: cleanup failed`);
+      continue;
+    }
+    if (batch.classOwnerName && delResult.filesRemoved.length === 0) {
       result.skipped += representedObjectCount;
       continue;
     }
 
     result.deleted += representedObjectCount;
-    result.filesRemoved.push(...delResult.filesRemoved);
   }
 
   return result;
@@ -218,7 +225,11 @@ export interface TransportImportOptions {
    *   - `'DEVK900001,DEVK900002,DEVK900003'` — multiple TRs (merged, deduplicated)
    */
   transportNumber: string;
-  /** Output directory for serialized files */
+  /**
+   * Output directory for serialized files. Concurrent imports must use distinct
+   * directories; this service does not coordinate writers to a shared directory.
+   * Use one comma-separated transportNumber call to combine transports.
+   */
   outputPath: string;
   /** Filter by object types (e.g., ['CLAS', 'INTF']) - if not specified, imports all */
   objectTypes?: string[];
@@ -525,6 +536,7 @@ export class ImportService {
               });
               results.deleted += cleanup.deleted;
               results.skipped += cleanup.skipped;
+              results.failed += cleanup.failed;
               filesRemoved.push(...cleanup.filesRemoved);
             } else {
               results.skipped += batchObjects.length;

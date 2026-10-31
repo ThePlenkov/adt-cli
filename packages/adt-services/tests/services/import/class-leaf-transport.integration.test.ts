@@ -519,9 +519,85 @@ describe('legacy ImportService class-component acquisition', () => {
     );
     expect(result.results).toEqual({
       success: 0,
-      skipped: 2,
-      failed: 0,
+      skipped: 0,
+      failed: 2,
       deleted: 0,
     });
   });
+
+  it.each([
+    { label: 'partial deletion', removeMain: true },
+    { label: 'rejected deletion', removeMain: false },
+  ])(
+    'reports $label as failed and retains removed paths',
+    async ({ removeMain }) => {
+      const className = 'ZCL_PARTIAL_DELETE';
+      const classGet = vi.fn(async () => {
+        throw Object.assign(new Error('not found'), { status: 404 });
+      });
+      const client = { adt: { oo: { classes: { get: classGet } } } };
+      const objects = [
+        { type: 'CPRI', name: className },
+        { type: 'CINC', name: `${className.padEnd(30, '=')}CCIMP` },
+      ].map(
+        (object) =>
+          new AdkTransportObjectRef({ client } as never, {
+            pgmid: 'LIMU',
+            wbtype: 'CLAS',
+            obj_func: '',
+            ...object,
+          }),
+      );
+      mockTransportGet.mockResolvedValue({
+        number: 'S0DK958193',
+        description: 'cleanup failure',
+        objects,
+      });
+      const mainPath = 'src/zcl_partial_delete.clas.abap';
+      const includePath = 'src/zcl_partial_delete.clas.locals_imp.abap';
+      await mkdir(join(outputPath, 'src'), { recursive: true });
+      await writeFile(join(outputPath, mainPath), 'stale main');
+      await writeFile(join(outputPath, includePath), 'stale include');
+      mockPlugin.instance.format.delete.mockImplementation(async () => {
+        if (removeMain) await rm(join(outputPath, mainPath));
+        return {
+          success: false,
+          filesRemoved: removeMain ? [mainPath] : [],
+          errors: ['include removal rejected'],
+        };
+      });
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      const { ImportService } =
+        await import('../../../src/services/import/service');
+      const result = await new ImportService().importTransport({
+        transportNumber: 'S0DK958193',
+        outputPath,
+        format: 'abapgit',
+        removeMissingObjects: true,
+      });
+      expect(result.results).toEqual({
+        success: 0,
+        skipped: 0,
+        failed: 2,
+        deleted: 0,
+      });
+      expect(result.filesRemoved).toEqual(removeMain ? [mainPath] : undefined);
+      expect(mockPlugin.instance.format.delete).toHaveBeenCalledTimes(1);
+      expect(log).toHaveBeenCalledWith(
+        expect.stringContaining('cleanup failed'),
+      );
+      expect(await readFile(join(outputPath, includePath), 'utf8')).toBe(
+        'stale include',
+      );
+      if (removeMain) {
+        await expect(
+          readFile(join(outputPath, mainPath), 'utf8'),
+        ).rejects.toMatchObject({ code: 'ENOENT' });
+      } else {
+        expect(await readFile(join(outputPath, mainPath), 'utf8')).toBe(
+          'stale main',
+        );
+      }
+    },
+  );
 });
