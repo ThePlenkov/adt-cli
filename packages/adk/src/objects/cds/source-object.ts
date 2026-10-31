@@ -36,7 +36,10 @@ export class AdkCdsSourceReadError extends Error {
   readonly phase = 'source' as const;
 
   constructor(cause: unknown) {
-    super('CDS source/main read failed', { cause });
+    super(
+      `CDS source/main read failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+      { cause },
+    );
   }
 }
 
@@ -46,16 +49,12 @@ export async function loadCdsMetadataAndSource<TMetadata, TSource>(
   loadSource: () => Promise<TSource>,
 ): Promise<[TMetadata, TSource]> {
   const metadataRequest = loadMetadata();
-  let sourceRequest: Promise<TSource>;
-  try {
-    sourceRequest = Promise.resolve(loadSource());
-  } catch (cause) {
-    sourceRequest = Promise.reject(cause);
-  }
-  const sourceResult = sourceRequest.then(
-    (value) => ({ value }),
-    (cause: unknown) => ({ error: new AdkCdsSourceReadError(cause) }),
-  );
+  const sourceResult = Promise.resolve()
+    .then(() => loadSource())
+    .then(
+      (value) => ({ value }),
+      (cause: unknown) => ({ error: new AdkCdsSourceReadError(cause) }),
+    );
 
   const metadata = await metadataRequest;
   const source = await sourceResult;

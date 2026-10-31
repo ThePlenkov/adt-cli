@@ -88,34 +88,50 @@ function getOrBuildSrcIndex(srcDir: string): Map<string, string[]> {
   return index;
 }
 
+function isWithinDirectory(dir: string, absolutePath: string): boolean {
+  const relativePath = relative(dir, absolutePath);
+  return (
+    relativePath.length > 0 &&
+    !isAbsolute(relativePath) &&
+    relativePath !== '..' &&
+    !relativePath.startsWith(`..${sep}`)
+  );
+}
+
+function addPathToSrcIndex(
+  index: Map<string, string[]>,
+  key: string,
+  absolutePath: string,
+): void {
+  const paths = index.get(key) ?? [];
+  if (!paths.includes(absolutePath)) paths.push(absolutePath);
+  index.set(key, paths);
+}
+
+function addFileToBuiltSrcIndex(
+  srcDir: string,
+  index: Map<string, string[]>,
+  filePath: string,
+): boolean {
+  const absolutePath = resolve(filePath);
+  if (!isWithinDirectory(srcDir, absolutePath)) return false;
+
+  const key = getObjectFilePrefix(absolutePath);
+  if (key) addPathToSrcIndex(index, key, absolutePath);
+  return true;
+}
+
 function addFilesToBuiltSrcIndex(srcDir: string, files: string[]): void {
   const index = srcDirIndexCache.get(srcDir);
   if (!index) return;
 
-  for (const filePath of files) {
-    const absolutePath = resolve(filePath);
-    const pathFromSrc = relative(srcDir, absolutePath);
-    if (
-      !pathFromSrc ||
-      isAbsolute(pathFromSrc) ||
-      pathFromSrc === '..' ||
-      pathFromSrc.startsWith(`..${sep}`)
-    ) {
-      // A successful serializer should only write below src. If it returns an
-      // unexpected path, discard the cache so the next lookup rebuilds safely.
-      srcDirIndexCache.delete(srcDir);
-      return;
-    }
-
-    const key = getObjectFilePrefix(absolutePath);
-    if (!key) continue;
-
-    const bucket = index.get(key);
-    if (bucket) {
-      if (!bucket.includes(absolutePath)) bucket.push(absolutePath);
-    } else {
-      index.set(key, [absolutePath]);
-    }
+  const hasOutOfSrcFile = files.some(
+    (filePath) => !addFileToBuiltSrcIndex(srcDir, index, filePath),
+  );
+  if (hasOutOfSrcFile) {
+    // A successful serializer should only write below src. If it returns an
+    // unexpected path, discard the cache so the next lookup rebuilds safely.
+    srcDirIndexCache.delete(srcDir);
   }
 }
 

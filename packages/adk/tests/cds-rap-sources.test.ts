@@ -130,11 +130,29 @@ describe('CDS/RAP source object loaders', () => {
         (error: unknown) => error,
       );
 
-      expect(readError).toMatchObject({ phase: 'source', cause: sourceError });
+      expect(readError).toMatchObject({
+        message: 'CDS source/main read failed: source endpoint missing',
+        phase: 'source',
+        cause: sourceError,
+      });
+      expect(readError).not.toHaveProperty('status');
       expect(contract.get).toHaveBeenCalledTimes(1);
       expect(contract.source.main.get).toHaveBeenCalledTimes(1);
     },
   );
+
+  it('includes a string source-read reason in the failure message', async () => {
+    const setup = createCtx();
+    const reason = 'source endpoint unavailable';
+    setup.ddl.sources.source.main.get.mockRejectedValue(reason);
+    const object = new AdkDdlSource(setup.ctx, 'Z_AFF_OBJECT');
+
+    await expect(object.load()).rejects.toMatchObject({
+      message: 'CDS source/main read failed: source endpoint unavailable',
+      phase: 'source',
+      cause: reason,
+    });
+  });
 
   it.each([
     ['DRAS', AdkCdsAspect, 'ddic/dras/sources'],
