@@ -19,7 +19,7 @@ const cliPackageRoot = resolve(
   '../..',
 );
 describe('installed ADT CLI package', () => {
-  it('declares and loads the configured flow command as a CLI runtime dependency', () => {
+  it.each(['adt', 'adt-all'])('loads flow from %s', (entry) => {
     const installRoot = join(
       tmpdir(),
       `adt-cli-flow-install-${process.pid}-${Date.now()}`,
@@ -77,7 +77,7 @@ describe('installed ADT CLI package', () => {
         'export default { commands: ["@abapify/adt-flow/commands/flow"] };\n',
       );
 
-      const cliPath = join(cliInstallRoot, 'dist/bin/adt.mjs');
+      const cliPath = join(cliInstallRoot, `dist/bin/${entry}.mjs`);
       const result = spawnSync(
         process.execPath,
         [cliPath, '--config', configPath, 'flow', 'checkout', 'tr', '--help'],

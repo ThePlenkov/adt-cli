@@ -34,7 +34,8 @@
         "{projectRoot}/src/**/*.ts",
         "{workspaceRoot}/packages/adt-atc/src/**/*.ts",
         "{workspaceRoot}/packages/adt-export/src/**/*.ts",
-        "{workspaceRoot}/packages/adt-codegen/src/**/*.ts"
+        "{workspaceRoot}/packages/adt-codegen/src/**/*.ts",
+        "{workspaceRoot}/packages/adt-flow/src/**/*.ts"
       ],
       "dependsOn": ["^build"]
     }
