@@ -1,3 +1,29 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **aclass:** typed EventDecl + forward-class decl + abaplint gate ([4db5da05](https://github.com/ThePlenkov/adt-cli/commit/4db5da05))
+- **openai-codegen:** Wave 3 — aclass parse-gate + lexer extensions ([af02c42c](https://github.com/ThePlenkov/adt-cli/commit/af02c42c))
+- **aclass:** Wave 1+2 — parser, typed AST, fixtures, roundtrip ([c0325729](https://github.com/ThePlenkov/adt-cli/commit/c0325729))
+- **aclass:** Wave 0 — package skeleton + Chevrotain lexer ([64d91045](https://github.com/ThePlenkov/adt-cli/commit/64d91045))
+- **aclass:** Wave 0 — package skeleton + Chevrotain lexer ([4241a89b](https://github.com/ThePlenkov/adt-cli/commit/4241a89b))
+
+### 🩹 Fixes
+
+- harden config parsing, typed serialization contracts and MCP tool schemas ([#304](https://github.com/ThePlenkov/adt-cli/pull/304))
+- **openspec:** align archived specs with shipped behavior ([0f016a54](https://github.com/ThePlenkov/adt-cli/commit/0f016a54))
+- **deps:** upgrade chevrotain and mastra instead of overrides ([1bc31b61](https://github.com/ThePlenkov/adt-cli/commit/1bc31b61))
+- **release:** add repository metadata for sigstore provenance ([c9ff002e](https://github.com/ThePlenkov/adt-cli/commit/c9ff002e))
+- **aclass:** qualified method names + keyword method names ([c2bf3a84](https://github.com/ThePlenkov/adt-cli/commit/c2bf3a84))
+- **aclass+openai-codegen:** address PR #111 review findings ([#111](https://github.com/ThePlenkov/adt-cli/issues/111))
+- **aclass:** proper regex metacharacter escaping in `kw()` helper ([8757714e](https://github.com/ThePlenkov/adt-cli/commit/8757714e))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for @abapify/aclass to align it with other projects, there were no code changes.

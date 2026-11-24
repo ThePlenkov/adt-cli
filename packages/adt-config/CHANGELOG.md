@@ -1,3 +1,36 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **adt-flow:** add incremental transport checkout ([#150](https://github.com/ThePlenkov/adt-cli/pull/150))
+- enhance service key authentication and add redirect URI support ([831c6b24](https://github.com/ThePlenkov/adt-cli/commit/831c6b24))
+- **release:** setup Nx Release publishing with GitHub CI ([0243482f](https://github.com/ThePlenkov/adt-cli/commit/0243482f))
+- **adt-config:** implement --config flag support in config loader ([afe9d8d0](https://github.com/ThePlenkov/adt-cli/commit/afe9d8d0))
+
+### 🩹 Fixes
+
+- **security:** add containment checks for CodeQL path-injection ([7ddb048d](https://github.com/ThePlenkov/adt-cli/commit/7ddb048d))
+- **security:** apply path.resolve and lgtm suppressions for remaining JS alerts ([fa36b0f0](https://github.com/ThePlenkov/adt-cli/commit/fa36b0f0))
+- **security:** use simpler regex guards for CodeQL recognition ([#346](https://github.com/ThePlenkov/adt-cli/pull/346))
+- **security:** refine path guards to reject traversal segments only, not valid filenames with dots ([#345](https://github.com/ThePlenkov/adt-cli/pull/345))
+- **security:** use CodeQL-recognized regex sanitizers for remaining findings ([f4e4c9b5](https://github.com/ThePlenkov/adt-cli/commit/f4e4c9b5))
+- **security:** resolve all CodeQL code-scanning findings ([#344](https://github.com/ThePlenkov/adt-cli/pull/344))
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+- address all SonarQube findings for PR #81 ([#81](https://github.com/ThePlenkov/adt-cli/issues/81))
+- preserve targetNamespace xmlns in stripUnusedNamespaces + null guard in config-loader ([32e465be](https://github.com/ThePlenkov/adt-cli/commit/32e465be))
+- add missing ts-morph and adk deps, bump to 0.1.10 ([ed143378](https://github.com/ThePlenkov/adt-cli/commit/ed143378))
+- add missing zod dependency to adt-schemas and ts-xsd, bump to 0.1.9 ([c85f3a8c](https://github.com/ThePlenkov/adt-cli/commit/c85f3a8c))
+- address all Qodo review comments from today's PRs (#44-#49) ([#44](https://github.com/ThePlenkov/adt-cli/issues/44), [#49](https://github.com/ThePlenkov/adt-cli/issues/49))
+- resolve typecheck failures across workspace ([e6d46651](https://github.com/ThePlenkov/adt-cli/commit/e6d46651))
+- **ci:** address Qodo review comments on release workflows ([645ee885](https://github.com/ThePlenkov/adt-cli/commit/645ee885))
+- **ci:** fix format and lint errors to unblock CI pipeline ([74f4a1d9](https://github.com/ThePlenkov/adt-cli/commit/74f4a1d9))
+
+### ❤️ Thank You
+
+- Devin AI @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for @abapify/adt-config to align it with other projects, there were no code changes.

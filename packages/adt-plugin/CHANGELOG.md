@@ -1,3 +1,32 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **abapgit:** dual-format deserialization foundation (XML + AFF JSON) ([#198](https://github.com/ThePlenkov/adt-cli/pull/198))
+- **adt-flow:** add incremental transport checkout ([#150](https://github.com/ThePlenkov/adt-cli/pull/150))
+- transport deletion-aware import with obj_func filter and multi-TR merge ([22fe3d26](https://github.com/ThePlenkov/adt-cli/commit/22fe3d26))
+- **plugin:** FormatPlugin API foundation — E05 ([dbcf8fb1](https://github.com/ThePlenkov/adt-cli/commit/dbcf8fb1))
+- abapGit roundtrip - export, deploy, and structure support ([29859632](https://github.com/ThePlenkov/adt-cli/commit/29859632))
+- remove OAT format everywhere, make abapgit the default ([d7a82b41](https://github.com/ThePlenkov/adt-cli/commit/d7a82b41))
+- optimize export by skipping unchanged sources and auto-creating packages ([015c9676](https://github.com/ThePlenkov/adt-cli/commit/015c9676))
+- **import:** support plugin format options for abapgit folder logic ([143cec32](https://github.com/ThePlenkov/adt-cli/commit/143cec32))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+- add missing ts-morph and adk deps, bump to 0.1.10 ([ed143378](https://github.com/ThePlenkov/adt-cli/commit/ed143378))
+- add missing zod dependency to adt-schemas and ts-xsd, bump to 0.1.9 ([c85f3a8c](https://github.com/ThePlenkov/adt-cli/commit/c85f3a8c))
+- address all Qodo review comments from today's PRs (#44-#49) ([#44](https://github.com/ThePlenkov/adt-cli/issues/44), [#49](https://github.com/ThePlenkov/adt-cli/issues/49))
+- resolve typecheck failures across workspace ([e6d46651](https://github.com/ThePlenkov/adt-cli/commit/e6d46651))
+- **ci:** fix format and lint errors to unblock CI pipeline ([74f4a1d9](https://github.com/ThePlenkov/adt-cli/commit/74f4a1d9))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Devin AI @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-plugin to align it with other projects, there were no code changes.

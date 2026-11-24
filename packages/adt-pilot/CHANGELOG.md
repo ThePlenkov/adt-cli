@@ -1,3 +1,27 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **adt-pilot:** add local dev stack for HTTP MCP and Mastra playground ([e5d204ce](https://github.com/ThePlenkov/adt-cli/commit/e5d204ce))
+- **adt-pilot:** fix build — disable dts (OOM), explicit return types ([a966ba2c](https://github.com/ThePlenkov/adt-cli/commit/a966ba2c))
+- **adt-pilot:** scaffold package — source, tests, config ([8d11d287](https://github.com/ThePlenkov/adt-cli/commit/8d11d287))
+
+### 🩹 Fixes
+
+- **deps:** upgrade chevrotain and mastra instead of overrides ([1bc31b61](https://github.com/ThePlenkov/adt-cli/commit/1bc31b61))
+- **adt-pilot:** address PR #121 review — docs, types, workspace deps ([#121](https://github.com/ThePlenkov/adt-cli/issues/121))
+- **adt-pilot:** remove unused @mastra/mcp dep; fix URL log sanitization and docs port/env issues ([ca10c0d4](https://github.com/ThePlenkov/adt-cli/commit/ca10c0d4))
+- **adt-pilot:** address review and lint findings ([dd351d57](https://github.com/ThePlenkov/adt-cli/commit/dd351d57))
+- **adt-pilot:** align declared deps with actual usage ([b57ad46e](https://github.com/ThePlenkov/adt-cli/commit/b57ad46e))
+- **adt-pilot:** use extensionless internal imports per bundler-imports rule ([8e279f3d](https://github.com/ThePlenkov/adt-cli/commit/8e279f3d))
+- **adt-pilot:** use https in test/example URLs to clear SonarCloud hotspots ([96f0daf3](https://github.com/ThePlenkov/adt-cli/commit/96f0daf3))
+
+### ❤️ Thank You
+
+- Devin AI @devin-ai-integration[bot]
+- Petr Plenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-pilot to align it with other projects, there were no code changes.

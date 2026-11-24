@@ -1,3 +1,26 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **plugin:** FormatPlugin API foundation — E05 ([dbcf8fb1](https://github.com/ThePlenkov/adt-cli/commit/dbcf8fb1))
+- **adt-diff:** add --raw mode, fix abapLanguageVersion auth issue, defer CLAS include saves ([39997c2d](https://github.com/ThePlenkov/adt-cli/commit/39997c2d))
+- **adt-diff:** rename --format to --source, add annotation filtering for CDS comparison ([f12ad872](https://github.com/ThePlenkov/adt-cli/commit/f12ad872))
+- **adt-diff:** support multi-file and glob patterns in diff command ([120055ba](https://github.com/ThePlenkov/adt-cli/commit/120055ba))
+- **adt-diff:** add --format ddl option and fix CDS DDL generation ([58a44808](https://github.com/ThePlenkov/adt-cli/commit/58a44808))
+- add adt diff command and fix CDS-to-abapGit serialization ([e79ecb8f](https://github.com/ThePlenkov/adt-cli/commit/e79ecb8f))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+- resolve all pre-existing typecheck + test failures — QC1 ([c1970023](https://github.com/ThePlenkov/adt-cli/commit/c1970023))
+- **adt-diff:** align zage_tabl test expectations with fixture ([63448d2d](https://github.com/ThePlenkov/adt-cli/commit/63448d2d))
+- **adt-diff:** use .acds extension for CDS DDL diff display ([2b9289fb](https://github.com/ThePlenkov/adt-cli/commit/2b9289fb))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-diff to align it with other projects, there were no code changes.

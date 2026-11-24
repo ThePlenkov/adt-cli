@@ -1,3 +1,33 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- fix ADT export XML serialization and live-test on BTP + on-prem ([a58218fd](https://github.com/ThePlenkov/adt-cli/commit/a58218fd))
+- move all packages to @abapify namespace for GitHub Registry publishing ([82b2aa41](https://github.com/ThePlenkov/adt-cli/commit/82b2aa41))
+
+### 🩹 Fixes
+
+- **sonar:** residual findings after the cleanup sweep ([#306](https://github.com/ThePlenkov/adt-cli/pull/306))
+- **sonar:** stage 1 — exec/fs sink hardening, CI install hardening, analysis scope ([#299](https://github.com/ThePlenkov/adt-cli/pull/299))
+- **sonar:** address security, bugs, and code smells ([839ff1d3](https://github.com/ThePlenkov/adt-cli/commit/839ff1d3))
+- harden cross-platform resolver traversal and adt command execution ([3608bb4c](https://github.com/ThePlenkov/adt-cli/commit/3608bb4c))
+- address validation feedback for quote stripping and adt binary path ([656f0396](https://github.com/ThePlenkov/adt-cli/commit/656f0396))
+- apply cross-platform scanning and runtime configurability updates ([83ddeddf](https://github.com/ThePlenkov/adt-cli/commit/83ddeddf))
+- **security:** unblock SonarCloud Quality Gate on new_security_hotspots_reviewed ([d08777c1](https://github.com/ThePlenkov/adt-cli/commit/d08777c1))
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+- update fast-xml-parser dependency to version 5.5.3 ([826f681b](https://github.com/ThePlenkov/adt-cli/commit/826f681b))
+- add missing ts-morph and adk deps, bump to 0.1.10 ([ed143378](https://github.com/ThePlenkov/adt-cli/commit/ed143378))
+- add missing zod dependency to adt-schemas and ts-xsd, bump to 0.1.9 ([c85f3a8c](https://github.com/ThePlenkov/adt-cli/commit/c85f3a8c))
+- address all Qodo review comments from today's PRs (#44-#49) ([#44](https://github.com/ThePlenkov/adt-cli/issues/44), [#49](https://github.com/ThePlenkov/adt-cli/issues/49))
+- resolve typecheck failures across workspace ([e6d46651](https://github.com/ThePlenkov/adt-cli/commit/e6d46651))
+- **ci:** fix format and lint errors to unblock CI pipeline ([74f4a1d9](https://github.com/ThePlenkov/adt-cli/commit/74f4a1d9))
+
+### ❤️ Thank You
+
+- CommandCodeBot
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for @abapify/adt-codegen to align it with other projects, there were no code changes.

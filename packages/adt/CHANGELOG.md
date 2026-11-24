@@ -1,3 +1,22 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **release:** independent per-package versioning + auto-release on main ([ccbc2a4a](https://github.com/ThePlenkov/adt-cli/commit/ccbc2a4a))
+- **adt:** add @abapify/adt standalone bundle package ([6f0e57fa](https://github.com/ThePlenkov/adt-cli/commit/6f0e57fa))
+
+### 🩹 Fixes
+
+- **cli:** declare flow as a production dependency ([#278](https://github.com/ThePlenkov/adt-cli/pull/278))
+- **adt:** declare bundled workspace deps so nx orders adt:build ([1fe54357](https://github.com/ThePlenkov/adt-cli/commit/1fe54357))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- OpenAI Codex @oai-codex
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt to align it with other projects, there were no code changes.

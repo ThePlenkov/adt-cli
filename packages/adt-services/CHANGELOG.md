@@ -1,3 +1,33 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **cts:** normalize transport metadata and plan ordered multi-root scope ([#356](https://github.com/ThePlenkov/adt-cli/pull/356))
+- **adtc-cli:** add --output/-o to read commands for UTF-8 file output ([#263](https://github.com/ThePlenkov/adt-cli/pull/263))
+
+### 🩹 Fixes
+
+- **adk:** classify SNOTE CINS instructions and resolve CPRO class-section leaves ([#352](https://github.com/ThePlenkov/adt-cli/pull/352))
+- **typecheck:** remaining strict source typecheck errors ([#311](https://github.com/ThePlenkov/adt-cli/pull/311), [#314](https://github.com/ThePlenkov/adt-cli/pull/314))
+- **sonar:** residual findings after the cleanup sweep ([#306](https://github.com/ThePlenkov/adt-cli/pull/306))
+- **adt-services:** negotiate ADT session media type during Basic auth ([#297](https://github.com/ThePlenkov/adt-cli/pull/297))
+- keep import completeness diagnostics nonblocking ([#298](https://github.com/ThePlenkov/adt-cli/pull/298))
+- **adt-cli:** silence intentional insecure-TLS opt-in, split verifyBasicAuth ([#296](https://github.com/ThePlenkov/adt-cli/pull/296))
+- **adt-cli:** verify basic-auth credentials against SAP before login succeeds ([#289](https://github.com/ThePlenkov/adt-cli/pull/289), [#295](https://github.com/ThePlenkov/adt-cli/pull/295))
+- **import:** acquire CTS class owners and preserve failed objects ([#279](https://github.com/ThePlenkov/adt-cli/pull/279))
+- **adk:** resolve CTS class leaves to CLAS owners ([#277](https://github.com/ThePlenkov/adt-cli/pull/277))
+- leftover review nits from PRs #183, #186, #209 ([#253](https://github.com/ThePlenkov/adt-cli/pull/253), [#271](https://github.com/ThePlenkov/adt-cli/pull/271), [#183](https://github.com/ThePlenkov/adt-cli/issues/183), [#186](https://github.com/ThePlenkov/adt-cli/issues/186), [#209](https://github.com/ThePlenkov/adt-cli/issues/209))
+- **abapgit:** preserve program subtype metadata and source handoff ([b5394ab9](https://github.com/ThePlenkov/adt-cli/commit/b5394ab9))
+- **import:** preserve workbench subtypes and include serialization ([b0fd0106](https://github.com/ThePlenkov/adt-cli/commit/b0fd0106))
+- **adt-cli:** report real package version; fix typecheck regressions ([0dd4b802](https://github.com/ThePlenkov/adt-cli/commit/0dd4b802))
+
+### ❤️ Thank You
+
+- Codex @oai-codex
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-services to align it with other projects, there were no code changes.

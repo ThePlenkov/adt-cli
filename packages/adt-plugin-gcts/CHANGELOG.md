@@ -1,3 +1,37 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **gcts:** add dedicated FUNC handler for function module serialization ([#246](https://github.com/ThePlenkov/adt-cli/pull/246))
+- **adt-plugin-gcts:** schema-validate LIMU sub-object examples ([#266](https://github.com/ThePlenkov/adt-cli/pull/266))
+- **adt-plugin-gcts:** LIMU sub-objects + extension-aware source keys ([#238](https://github.com/ThePlenkov/adt-cli/pull/238))
+- **adt-plugin-gcts:** source companions + DOCU for wave2 stubs ([#235](https://github.com/ThePlenkov/adt-cli/pull/235))
+- **adt-plugin-gcts:** spec file-name grammar + full source-extension coverage ([#234](https://github.com/ThePlenkov/adt-cli/pull/234))
+- **adt-plugin-gcts:** schema-aware generic emit/parse for all wave2 stubs ([#233](https://github.com/ThePlenkov/adt-cli/pull/233))
+- **adt-plugin-gcts:** AFF wave-0 machinery — schema access, validation, codegen, coverage ([#232](https://github.com/ThePlenkov/adt-cli/pull/232))
+- **gcts:** Full AFF abap-file-formats support — Wave 0+1+2 ([#193](https://github.com/ThePlenkov/adt-cli/pull/193))
+- **gcts:** format.export — complete checkin roundtrip for gCTS — QC2 ([5590ea19](https://github.com/ThePlenkov/adt-cli/commit/5590ea19))
+- **gcts:** AFF/gCTS format plugin — E06 ([67676d24](https://github.com/ThePlenkov/adt-cli/commit/67676d24))
+
+### 🩹 Fixes
+
+- **typecheck:** remaining strict source typecheck errors ([#311](https://github.com/ThePlenkov/adt-cli/pull/311), [#314](https://github.com/ThePlenkov/adt-cli/pull/314))
+- **gcts:** remove unused lang in func handler (S1854) ([fea34898](https://github.com/ThePlenkov/adt-cli/commit/fea34898))
+- **gcts:** keep DdlsLike fields optional (S4782) ([cd121216](https://github.com/ThePlenkov/adt-cli/commit/cd121216))
+- **gcts:** remove redundant optional specifier (S4782) ([907af97e](https://github.com/ThePlenkov/adt-cli/commit/907af97e))
+- remove redundant optional specifiers and use TypeError (S4782, S7786) ([07a0a42b](https://github.com/ThePlenkov/adt-cli/commit/07a0a42b))
+- harden config parsing, typed serialization contracts and MCP tool schemas ([#304](https://github.com/ThePlenkov/adt-cli/pull/304))
+- **sonar:** residual findings after the cleanup sweep ([#306](https://github.com/ThePlenkov/adt-cli/pull/306))
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+- **ci:** resolve CodeQL ReDoS + code-quality findings, fix main CI ([9670d6df](https://github.com/ThePlenkov/adt-cli/commit/9670d6df))
+- resolve all pre-existing typecheck + test failures — QC1 ([c1970023](https://github.com/ThePlenkov/adt-cli/commit/c1970023))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-plugin-gcts to align it with other projects, there were no code changes.

@@ -1,3 +1,52 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **flow:** assess persisted checkout coverage against verified file evidence ([#367](https://github.com/ThePlenkov/adt-cli/pull/367))
+- **flow:** reconcile proven CTS deletions with owned source files ([#365](https://github.com/ThePlenkov/adt-cli/pull/365))
+- **flow:** derive unchanged class component boundaries from sibling provenance ([16c1dcc2](https://github.com/ThePlenkov/adt-cli/commit/16c1dcc2))
+- **flow:** assess stale descriptor ownership from file hashes ([#354](https://github.com/ThePlenkov/adt-cli/pull/354))
+- **flow:** index manifest-inexact checkout ([7daba050](https://github.com/ThePlenkov/adt-cli/commit/7daba050))
+- **flow:** add source-free transport indexing ([2cf8bb46](https://github.com/ThePlenkov/adt-cli/commit/2cf8bb46))
+- **adt-flow:** index omitted partial objects ([13d14600](https://github.com/ThePlenkov/adt-cli/commit/13d14600))
+- **flow:** report partial transport import gaps ([#190](https://github.com/ThePlenkov/adt-cli/pull/190))
+- **flow:** persist complete CTS inventories ([#182](https://github.com/ThePlenkov/adt-cli/pull/182))
+- **adt-flow:** add incremental transport checkout ([#150](https://github.com/ThePlenkov/adt-cli/pull/150))
+
+### 🩹 Fixes
+
+- **adk:** classify SNOTE CINS instructions and resolve CPRO class-section leaves ([#352](https://github.com/ThePlenkov/adt-cli/pull/352))
+- **adt-flow:** serialize checkout/index with cross-process workspace lock ([#324](https://github.com/ThePlenkov/adt-cli/pull/324))
+- **adt-flow:** preserve unselected class components without source anchor ([#323](https://github.com/ThePlenkov/adt-cli/pull/323))
+- **adt-flow:** harden readRegularText against parent-dir symlink TOCTOU ([#322](https://github.com/ThePlenkov/adt-cli/pull/322))
+- harden config parsing, typed serialization contracts and MCP tool schemas ([#304](https://github.com/ThePlenkov/adt-cli/pull/304))
+- **sonar:** stage 1 — exec/fs sink hardening, CI install hardening, analysis scope ([#299](https://github.com/ThePlenkov/adt-cli/pull/299))
+- keep import completeness diagnostics nonblocking ([#298](https://github.com/ThePlenkov/adt-cli/pull/298))
+- **sonar:** address security, bugs, and code smells ([839ff1d3](https://github.com/ThePlenkov/adt-cli/commit/839ff1d3))
+- **deps:** raise zod floor to ^4.6.7 in ts-xsd and adt-schemas (GHSA-mrhx-c7xc-m3w5) ([#280](https://github.com/ThePlenkov/adt-cli/pull/280))
+- **adk:** resolve CTS class leaves to CLAS owners ([#277](https://github.com/ThePlenkov/adt-cli/pull/277))
+- **flow:** materialize CTS class components and report checkout coverage ([#276](https://github.com/ThePlenkov/adt-cli/pull/276))
+- **flow:** never reuse the active 00000 source version ([#240](https://github.com/ThePlenkov/adt-cli/pull/240))
+- **flow:** preserve index-only recovery invariants ([3d587744](https://github.com/ThePlenkov/adt-cli/commit/3d587744))
+- **adt-flow:** expose diverged ownership path ([d6f54833](https://github.com/ThePlenkov/adt-cli/commit/d6f54833))
+- **adt-flow:** protect preserved omitted objects ([8e253d15](https://github.com/ThePlenkov/adt-cli/commit/8e253d15))
+- **flow:** ignore unsupported manifest diagnostics ([#172](https://github.com/ThePlenkov/adt-cli/pull/172))
+- **adk:** skip unmaterializable transport objects ([#168](https://github.com/ThePlenkov/adt-cli/pull/168))
+- **flow:** skip unsupported transport objects ([#166](https://github.com/ThePlenkov/adt-cli/pull/166))
+- **adt-flow:** ignore CTS release metadata during checkout ([#156](https://github.com/ThePlenkov/adt-cli/pull/156))
+- CTS lifecycle follow-ups — lock correlation, release details, flow scope ([#157](https://github.com/ThePlenkov/adt-cli/pull/157))
+- verify CTS lifecycle, task creation, and lock correlation ([#151](https://github.com/ThePlenkov/adt-cli/pull/151))
+- verify CTS lifecycle and task deltas ([cbe83c5b](https://github.com/ThePlenkov/adt-cli/commit/cbe83c5b))
+
+### ❤️ Thank You
+
+- Codex @oai-codex
+- CommandCodeBot
+- Devin @devin-ai-integration[bot]
+- Devin AI @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 ### 🚀 Features

@@ -1,3 +1,36 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **acds:** extend the CDS grammar to the full DDL/DCL statement set ([5796ebbb](https://github.com/ThePlenkov/adt-cli/commit/5796ebbb))
+- **acds:** full CDS DDL/DCL grammar + AST walker + validators — E09 ([b52ec71b](https://github.com/ThePlenkov/adt-cli/commit/b52ec71b))
+- add adt diff command and fix CDS-to-abapGit serialization ([e79ecb8f](https://github.com/ThePlenkov/adt-cli/commit/e79ecb8f))
+- abapGit roundtrip - export, deploy, and structure support ([29859632](https://github.com/ThePlenkov/adt-cli/commit/29859632))
+
+### 🩹 Fixes
+
+- **typecheck:** partial strict source typecheck fixes ([#311](https://github.com/ThePlenkov/adt-cli/pull/311), [#313](https://github.com/ThePlenkov/adt-cli/pull/313))
+- **acds:** allow empty parameter list for table function sources in data sources ([02a5508a](https://github.com/ThePlenkov/adt-cli/commit/02a5508a))
+- **acds:** support named-argument syntax and namespace-qualified names ([#264](https://github.com/ThePlenkov/adt-cli/pull/264))
+- **acds:** order Redefinition before Redefine in token list ([dc1e5278](https://github.com/ThePlenkov/adt-cli/commit/dc1e5278))
+- **acds:** round-2 review findings — coverage metadata, walker, docs ([6e38c7e5](https://github.com/ThePlenkov/adt-cli/commit/6e38c7e5))
+- **acds:** address review findings — parser robustness, docs, tests ([d8a3e2fd](https://github.com/ThePlenkov/adt-cli/commit/d8a3e2fd))
+- **acds:** make the join syntax flavour-independent and support FULL OUTER JOIN ([557f7c5b](https://github.com/ThePlenkov/adt-cli/commit/557f7c5b))
+- **acds:** recognize keywords case-insensitively ([a8c09d3e](https://github.com/ThePlenkov/adt-cli/commit/a8c09d3e))
+- **acds:** enforce the ON condition in the join grammar ([d6df7b93](https://github.com/ThePlenkov/adt-cli/commit/d6df7b93))
+- **acds:** keep FROM-region starters out of the bare source alias ([37d750f1](https://github.com/ThePlenkov/adt-cli/commit/37d750f1))
+- **deps:** upgrade chevrotain and mastra instead of overrides ([1bc31b61](https://github.com/ThePlenkov/adt-cli/commit/1bc31b61))
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+- **pr-103:** address review comments — type safety, parity, harness, policy ([d5b14cd9](https://github.com/ThePlenkov/adt-cli/commit/d5b14cd9))
+- resolve SonarQube quality gate failures (security hotspot + duplication) ([8de6152a](https://github.com/ThePlenkov/adt-cli/commit/8de6152a))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- rol3333yahoo.com
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for @abapify/acds to align it with other projects, there were no code changes.

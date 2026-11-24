@@ -1,3 +1,29 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- add ADT proxy server with JSON↔XML conversion ([49271e22](https://github.com/ThePlenkov/adt-cli/commit/49271e22))
+
+### 🩹 Fixes
+
+- **security:** resolve all CodeQL code-scanning findings ([#344](https://github.com/ThePlenkov/adt-cli/pull/344))
+- **adt-proxy:** add publishConfig.access for npm publishing ([#208](https://github.com/ThePlenkov/adt-cli/pull/208))
+- **proxy:** skip set-cookie in forEach loop to prevent header flattening ([46a1ca47](https://github.com/ThePlenkov/adt-cli/commit/46a1ca47))
+- address CI failures - remove dynamic RegExp, fix lint errors, add NX Cloud fallback ([66837675](https://github.com/ThePlenkov/adt-cli/commit/66837675))
+- address CI review feedback - security, reliability, and code quality ([4d540802](https://github.com/ThePlenkov/adt-cli/commit/4d540802))
+- address 3 blocking issues in ADT proxy rework ([c259a4e8](https://github.com/ThePlenkov/adt-cli/commit/c259a4e8))
+- address CI feedback - error handling, fetch timeout, server crash risk ([0f2bb0c5](https://github.com/ThePlenkov/adt-cli/commit/0f2bb0c5))
+- address all review feedback - round 2 ([bbef42f2](https://github.com/ThePlenkov/adt-cli/commit/bbef42f2))
+- address CodeRabbit review feedback ([a9676264](https://github.com/ThePlenkov/adt-cli/commit/a9676264))
+
+### ❤️ Thank You
+
+- Birch (gastown)
+- Devin @devin-ai-integration[bot]
+- Maple (gastown)
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-proxy to align it with other projects, there were no code changes.

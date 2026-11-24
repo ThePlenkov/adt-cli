@@ -1,3 +1,28 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **function:** FUGR/FUNC CLI + MCP — E02 ([99b85330](https://github.com/ThePlenkov/adt-cli/commit/99b85330))
+- **aunit:** ABAP Unit code coverage — JaCoCo output + CLI/MCP parity ([ad12d14b](https://github.com/ThePlenkov/adt-cli/commit/ad12d14b))
+- add AUnit sonar format, improved exit codes, and ATC customizing command ([66f3f10b](https://github.com/ThePlenkov/adt-cli/commit/66f3f10b))
+
+### 🩹 Fixes
+
+- **reports:** harden report normalization after merge review ([#361](https://github.com/ThePlenkov/adt-cli/pull/361))
+- **aunit:** emit GitLab-resolvable JaCoCo paths ([#181](https://github.com/ThePlenkov/adt-cli/pull/181))
+- **aunit:** send SAP coverage query bodies ([#179](https://github.com/ThePlenkov/adt-cli/pull/179))
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+- **pr-103:** address review comments — type safety, parity, harness, policy ([d5b14cd9](https://github.com/ThePlenkov/adt-cli/commit/d5b14cd9))
+- resolve all pre-existing typecheck + test failures — QC1 ([c1970023](https://github.com/ThePlenkov/adt-cli/commit/c1970023))
+- **sonarqube:** fix code quality issues from PR #76 ([#76](https://github.com/ThePlenkov/adt-cli/issues/76))
+
+### ❤️ Thank You
+
+- Codex @oai-codex
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-aunit to align it with other projects, there were no code changes.

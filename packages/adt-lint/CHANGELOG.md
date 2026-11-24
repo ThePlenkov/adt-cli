@@ -1,3 +1,24 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- implement arc-1 parity across adt-lint, adt-contracts, adt-mcp, and adt-cli ([361ff373](https://github.com/ThePlenkov/adt-cli/commit/361ff373))
+- **adt-lint:** scaffold shared abaplint utilities package ([9f29ac2e](https://github.com/ThePlenkov/adt-cli/commit/9f29ac2e))
+
+### 🩹 Fixes
+
+- **sonar:** residual findings after the cleanup sweep ([#306](https://github.com/ThePlenkov/adt-cli/pull/306))
+- use localeCompare in sort for SonarCloud S2871 reliability ([cfafb4bf](https://github.com/ThePlenkov/adt-cli/commit/cfafb4bf))
+- guard starts[0] with nullish coalescing for SonarCloud reliability ([a5e8bffc](https://github.com/ThePlenkov/adt-cli/commit/a5e8bffc))
+- address PR review — regex security, method detection, BTP 404, lint gate, specs ([b72567f3](https://github.com/ThePlenkov/adt-cli/commit/b72567f3))
+- **adt-lint:** replace lazy '.*?' with '[^']*' in token regex to fix S5852/polynomial-redos ([23140530](https://github.com/ThePlenkov/adt-cli/commit/23140530))
+
+### ❤️ Thank You
+
+- Devin AI @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for @abapify/adt-lint to align it with other projects, there were no code changes.

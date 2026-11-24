@@ -1,3 +1,18 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **gcts-cli:** gCTS command plugin — E07 ([01295e4e](https://github.com/ThePlenkov/adt-cli/commit/01295e4e))
+
+### 🩹 Fixes
+
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+
+### ❤️ Thank You
+
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-plugin-gcts-cli to align it with other projects, there were no code changes.

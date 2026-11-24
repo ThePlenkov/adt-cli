@@ -1,3 +1,49 @@
+## 0.4.60 (2026-11-24)
+
+### 🚀 Features
+
+- **adt-atc:** bound + harden documentation bridge reads ([#268](https://github.com/ThePlenkov/adt-cli/pull/268))
+- **atc:** resolve finding check categories from the check variant form template ([#239](https://github.com/ThePlenkov/adt-cli/pull/239))
+- add AUnit sonar format, improved exit codes, and ATC customizing command ([66f3f10b](https://github.com/ThePlenkov/adt-cli/commit/66f3f10b))
+- move all packages to @abapify namespace for GitHub Registry publishing ([82b2aa41](https://github.com/ThePlenkov/adt-cli/commit/82b2aa41))
+- **atc:** plugin-based finding resolver architecture ([9a949250](https://github.com/ThePlenkov/adt-cli/commit/9a949250))
+- **atc:** include method name and raw location in GitLab report ([74f44bf6](https://github.com/ThePlenkov/adt-cli/commit/74f44bf6))
+- **adt-cli:** add ls command and atc --from-file option ([6d61447b](https://github.com/ThePlenkov/adt-cli/commit/6d61447b))
+
+### 🩹 Fixes
+
+- **reports:** harden report normalization after merge review ([#361](https://github.com/ThePlenkov/adt-cli/pull/361))
+- **security:** add lgtm suppressions for remaining JS alerts ([73676ca8](https://github.com/ThePlenkov/adt-cli/commit/73676ca8))
+- **security:** add containment checks for CodeQL path-injection ([7ddb048d](https://github.com/ThePlenkov/adt-cli/commit/7ddb048d))
+- **security:** use path.resolve for JS path-injection sinks ([0710f064](https://github.com/ThePlenkov/adt-cli/commit/0710f064))
+- **security:** apply path.resolve and lgtm suppressions for remaining JS alerts ([fa36b0f0](https://github.com/ThePlenkov/adt-cli/commit/fa36b0f0))
+- **security:** use simpler regex guards for CodeQL recognition ([#346](https://github.com/ThePlenkov/adt-cli/pull/346))
+- **security:** refine path guards to reject traversal segments only, not valid filenames with dots ([#345](https://github.com/ThePlenkov/adt-cli/pull/345))
+- **security:** use CodeQL-recognized regex sanitizers for remaining findings ([f4e4c9b5](https://github.com/ThePlenkov/adt-cli/commit/f4e4c9b5))
+- **security:** resolve all CodeQL code-scanning findings ([#344](https://github.com/ThePlenkov/adt-cli/pull/344))
+- **atc:** resolve abapGit paths from full ATC locations ([#194](https://github.com/ThePlenkov/adt-cli/pull/194))
+- harden cross-platform resolver traversal and adt command execution ([3608bb4c](https://github.com/ThePlenkov/adt-cli/commit/3608bb4c))
+- address validation feedback for quote stripping and adt binary path ([656f0396](https://github.com/ThePlenkov/adt-cli/commit/656f0396))
+- apply cross-platform scanning and runtime configurability updates ([83ddeddf](https://github.com/ThePlenkov/adt-cli/commit/83ddeddf))
+- **security:** unblock SonarCloud Quality Gate on new_security_hotspots_reviewed ([d08777c1](https://github.com/ThePlenkov/adt-cli/commit/d08777c1))
+- **packages:** add repository/homepage/bugs to every published package ([85b29310](https://github.com/ThePlenkov/adt-cli/commit/85b29310))
+- add missing ts-morph and adk deps, bump to 0.1.10 ([ed143378](https://github.com/ThePlenkov/adt-cli/commit/ed143378))
+- add missing zod dependency to adt-schemas and ts-xsd, bump to 0.1.9 ([c85f3a8c](https://github.com/ThePlenkov/adt-cli/commit/c85f3a8c))
+- address all Qodo review comments from today's PRs (#44-#49) ([#44](https://github.com/ThePlenkov/adt-cli/issues/44), [#49](https://github.com/ThePlenkov/adt-cli/issues/49))
+- **atc:** built-in abapgit resolver (no external dep needed) ([0c70b8ab](https://github.com/ThePlenkov/adt-cli/commit/0c70b8ab))
+- **atc:** resolve workspace packages from cwd for bundled CLI ([c6c31aa5](https://github.com/ThePlenkov/adt-cli/commit/c6c31aa5))
+- **atc:** resolve file paths and convert line numbers in GitLab formatter ([1a70ab45](https://github.com/ThePlenkov/adt-cli/commit/1a70ab45))
+- **atc:** extract method name from name= param in ATC location URI ([8bf0ef5a](https://github.com/ThePlenkov/adt-cli/commit/8bf0ef5a))
+- **adt-atc:** add .abap extension to GitLab code quality paths ([006ffecd](https://github.com/ThePlenkov/adt-cli/commit/006ffecd))
+- **adt-atc:** add .abap extension to GitLab code quality paths ([fddfaa65](https://github.com/ThePlenkov/adt-cli/commit/fddfaa65))
+
+### ❤️ Thank You
+
+- Codex @oai-codex
+- Devin @devin-ai-integration[bot]
+- Petr Plenkov @ThePlenkov
+- ThePlenkov @ThePlenkov
+
 ## 0.4.59 (2026-11-14)
 
 This was a version bump only for adt-atc to align it with other projects, there were no code changes.
